@@ -23,7 +23,7 @@
 
   /* Active/current link */
   .sidebar a.active {
-    background-color: #04AA6D;
+    background-color: #6bb9c5;
     color: white;
   }
 
@@ -37,7 +37,13 @@
   div.content {
     margin-left: 200px;
     padding: 1px 16px;
-    height: 1000px;
+  }
+
+  div.ray {
+    height: 97.5vh;
+    background-image: url("/images/francesco-califano-nRAXTImpm4k-unsplash.jpg");
+    background-size: 100% 100%;
+
   }
 
   /* On screens that are less than 700px wide, make the sidebar into a topbar */
