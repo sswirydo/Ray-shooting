@@ -6,11 +6,17 @@
 
 * * * * * * * * * * * * * * * * * */
 const EPSILON = 0.00001;
+const CANVAS_SIZE = 400;
 const TEXT_OFFSET = 5;
 const RESOLUTION = 400;
-const GRIDS = 10 + 2;
+const GRIDS_DEFAULT = 10 + 2;
+
 const BUTTON_X_SIZE = 90;
 const BUTTON_Y_SIZE = 20;
+
+const N_STEPS_DEFAULT = 100;
+
+var GRIDS = GRIDS_DEFAULT;
 var mirrors = [];
 var interval_exchange = null;
 var ray = null;
@@ -54,21 +60,29 @@ class Ray {
     this.print();
   }
 
+  clear() {
+    this.path = [this.start];
+  }
+
   addPointToPath(point) {
     this.path.push(point);
   }
 
   _computeDirections() {
     // FIXME only 4 direction
+    let only_four_dir =
+      this.dir.x === 0 || this.dir.y === 0 || this.dir.x === this.dir.y;
     let directions = [];
     directions.push(new Point(this.dir.x, this.dir.y)); // +x +y (12h)
-    directions.push(new Point(this.dir.y, this.dir.x)); // +y +x (UP-RIGHT)
     directions.push(new Point(this.dir.y, -this.dir.x)); // +y -x (3h) (RIGHT)
-    directions.push(new Point(this.dir.x, -this.dir.y)); // +x -y (DOWN-RIGHT)
     directions.push(new Point(-this.dir.x, -this.dir.y)); // -x -y (6h) (DOWN)
-    directions.push(new Point(-this.dir.y, -this.dir.x)); // -y -x (DOWN-LEFT)
     directions.push(new Point(-this.dir.y, this.dir.x)); // -y +x (9h) (LEFT)
-    directions.push(new Point(-this.dir.x, this.dir.y)); // -x +y (UP-LEFT)
+    if (!only_four_dir) {
+      directions.push(new Point(this.dir.y, this.dir.x)); // +y +x (UP-RIGHT)
+      directions.push(new Point(this.dir.x, -this.dir.y)); // +x -y (DOWN-RIGHT)
+      directions.push(new Point(-this.dir.y, -this.dir.x)); // -y -x (DOWN-LEFT)
+      directions.push(new Point(-this.dir.x, this.dir.y)); // -x +y (UP-LEFT)
+    }
     return directions;
   }
 
@@ -139,27 +153,46 @@ class IntegerInterval {
     console.log("EXCHANGE", this.exchange);
   }
 
+  _testFindBounce(x, y) {
+    for (let idx = 0; idx < this.intervals.length; idx++) {
+      let bounce = this.intervals[idx];
+      if (bounce.point.x === x && bounce.point.y === y) {
+        console.log(">>> ", "idx:", idx, bounce);
+      } else {
+        //console.log(">", bounce.point.x, bounce.point.y);
+      }
+    }
+  }
+
   f(ray, n) {
+    // this._testFindBounce(ray, 2, 9);
+
     let previous_idx = null;
     let bounce_idx = this._getFirstBounce(ray);
-    for (let i = 0; i < n; i++) {
-      ray.addPointToPath(this.intervals[bounce_idx].point);
-      previous_idx = bounce_idx;
-      bounce_idx = this.exchange[bounce_idx];
-      if (bounce_idx === null || bounce_idx === -1) {
-        console.log(
-          "oups. ",
-          "i:",
-          i,
-          "prev:",
-          previous_idx,
-          "next:",
-          bounce_idx,
-          "next_bounce",
-          this.intervals[previous_idx]
-        );
-        break;
+    if (bounce_idx) {
+      for (let i = 0; i < n; i++) {
+        console.log("ramen:", bounce_idx);
+        ray.addPointToPath(this.intervals[bounce_idx].point);
+        previous_idx = bounce_idx;
+        bounce_idx = this.exchange[bounce_idx];
+        if (bounce_idx === null || bounce_idx === -1) {
+          console.log(
+            "oups. ",
+            "i:",
+            i,
+            "prev:",
+            previous_idx,
+            "next:",
+            bounce_idx,
+            "next_bounce",
+            this.intervals[previous_idx]
+          );
+          break;
+        }
       }
+    } else {
+      console.log(">> Ray does not intersect any mirror.");
+      ray.print();
     }
   }
 
@@ -183,26 +216,6 @@ class IntegerInterval {
       }
     }
     return candidate;
-  }
-
-  // returns idx of the first bounce
-  _OLDgetFirstBounce(ray) {
-    // ULTRA FIXME: works for 1 case only (test purpose)
-    let candidates = [];
-    for (let i = 0; i < this.intervals.length; i++) {
-      let bounce = this.intervals[i];
-      if (
-        bounce.point.x === 5.5 &&
-        bounce.point.y === 0 &&
-        bounce.in_dir.x === ray.dir.x &&
-        bounce.in_dir.y === ray.dir.y
-      ) {
-        candidates.push(i);
-      } else {
-      }
-    }
-    // console.log("Candidates length test:", candidates.length);
-    return candidates[0];
   }
 
   _compute(ray, mirrors) {
@@ -246,7 +259,6 @@ class IntegerInterval {
       }
     } else {
       console.error("Unexpected case (fct: _getAllBounces())");
-      // throw "Unexpected case (fct: _getAllBounces())";
     }
   }
 
@@ -328,6 +340,7 @@ function yToP5(y) {
 }
 
 function computeReflections() {
+  ray.clear();
   interval_exchange = new IntegerInterval(ray, mirrors);
 }
 
@@ -340,23 +353,6 @@ function computeReflections() {
 function runTests() {}
 
 function createTestEnv1() {
-  /*
-    Example from Figure 5. (erronous?)
-    POINTS
-      A = (0,0)  B = (0,2)
-      C = (2,2)  D = (1, 0)
-    MIRRORS
-      AB, BC, CD
-    RAY
-      (1,1) with -1/2 slope (0, 0) -> (-2, 1)
-  */
-  mirrors.push(new Mirror(0, 0, 0, 2)); // AB
-  mirrors.push(new Mirror(0, 2, 2, 2)); // BC
-  mirrors.push(new Mirror(2, 2, 1, 0)); // CD
-  ray = new Ray(1, 1, -2 + 1, 1 + 1);
-}
-
-function createTestEnv2() {
   /*
     Example from Figure 1. (erronous?)
     POINTS
@@ -374,6 +370,19 @@ function createTestEnv2() {
   mirrors.push(new Mirror(6, 3, 6, 2)); // DE
   mirrors.push(new Mirror(6, 0, 0, 0)); // FA
   ray = new Ray(7, 3, 6, 1);
+}
+
+function createTestEnv2() {
+  GRIDS = 20;
+  mirrors.push(new Mirror(0, 3, 0, 7));
+  mirrors.push(new Mirror(0, 7, 3, 10));
+  mirrors.push(new Mirror(3, 10, 7, 10));
+  mirrors.push(new Mirror(7, 10, 10, 7));
+  mirrors.push(new Mirror(10, 7, 10, 3));
+  mirrors.push(new Mirror(10, 3, 7, 0));
+  mirrors.push(new Mirror(7, 0, 3, 0));
+  mirrors.push(new Mirror(3, 0, 0, 3));
+  ray = new Ray(2, 4, 2, 6);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -394,18 +403,10 @@ function setup() {
   // BUTTONS
   clear_button = makeButton("Clear", 425, 20 + 25 * 0, resetEnv);
 
-  x1_input = createInput();
-  y1_input = createInput();
-  x2_input = createInput();
-  y2_input = createInput();
-  x1_input.size(BUTTON_X_SIZE);
-  y1_input.size(BUTTON_X_SIZE);
-  x2_input.size(BUTTON_X_SIZE);
-  y2_input.size(BUTTON_X_SIZE);
-  x1_input.position(425, 20 + 25 * 2);
-  y1_input.position(425, 20 + 25 * 3);
-  x2_input.position(425, 20 + 25 * 4);
-  y2_input.position(425, 20 + 25 * 5);
+  x1_input = makeInput(425, 20 + 25 * 2);
+  y1_input = makeInput(425, 20 + 25 * 3);
+  x2_input = makeInput(425, 20 + 25 * 4);
+  y2_input = makeInput(425, 20 + 25 * 5);
   x1_text = createElement("h3", "x1 ←");
   y1_text = createElement("h3", "y1 ←");
   x2_text = createElement("h3", "x2");
@@ -414,12 +415,28 @@ function setup() {
   y1_text.position(y1_input.x + y1_input.width + 5, y1_input.y - 20);
   x2_text.position(x2_input.x + x2_input.width + 5, x2_input.y - 20);
   y2_text.position(y2_input.x + y2_input.width + 5, y2_input.y - 20);
-  button = makeButton("Add Mirror", 425, 20 + 25 * 6, addMirror);
-  button = makeButton("Add Ray", 425, 20 + 25 * 7, addRay);
-  button = makeButton("Fire the ray!", 425, 20 + 25 * 9, fireTheRay);
+  mirror_button = makeButton("Add Mirror", 425, 20 + 25 * 6, addMirror);
+  ray_button = makeButton("Add Ray", 425, 20 + 25 * 7, addRay);
 
-  button = makeButton("Test #1", 425, 20 + 25 * 11, importTest1);
-  button = makeButton("Test #2", 425, 20 + 25 * 12, importTest2);
+  n_steps_input = makeInput(425, 20 + 25 * 9, N_STEPS_DEFAULT);
+  n_steps_text = createElement("h3", "steps");
+  n_steps_text.position(
+    n_steps_input.x + n_steps_input.width + 5,
+    n_steps_input.y - 20
+  );
+
+  fire_button = makeButton("Fire the ray!", 425, 20 + 25 * 10, fireTheRay);
+
+  test_select = createSelect();
+  test_select.size(BUTTON_X_SIZE, BUTTON_Y_SIZE);
+  test_select.position(425, 20 + 25 * 12);
+  test_select.changed(selectHandler);
+  test_select.option("None");
+  test_select.option("Test 1");
+  test_select.option("Test 2");
+
+  test_text = createElement("h3", "tests");
+  test_text.position(test_select.x + test_select.width + 5, test_select.y - 20);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -427,21 +444,45 @@ function setup() {
   BUTTONS
 
 * * * * * * * * * * * * * * * * * */
-function makeButton(name, xpos, ypox, foo) {
+function makeButton(name, xpos, ypos, foo) {
   let button = createButton(name);
-  button.position(xpos, ypox);
+  button.position(xpos, ypos);
   button.mousePressed(foo);
   button.size(BUTTON_X_SIZE, BUTTON_Y_SIZE);
   return button;
 }
 
+function makeInput(xpos, ypos, defaultText = "") {
+  let input = createInput();
+  input.size(BUTTON_X_SIZE);
+  input.position(xpos, ypos);
+  input.value(defaultText);
+  return input;
+}
+
+function selectHandler() {
+  resetEnv();
+  switch (test_select.value()) {
+    case "Test 1":
+      createTestEnv1();
+      break;
+    case "Test 2":
+      createTestEnv2();
+      break;
+    default:
+  }
+  redraw();
+}
+
 function resetEnv() {
   console.clear();
+  GRIDS = GRIDS_DEFAULT;
   ray = null;
   mirrors = [];
   interval_exchange = null;
 
   clickCount = 0;
+  //n_steps_input.value(100);
   x1_input.value("");
   y1_input.value("");
   x2_input.value("");
@@ -451,51 +492,71 @@ function resetEnv() {
   x2_text.html("x2");
   y2_text.html("y2");
 
+  colorElement(ray_button, "black");
+  colorElement(mirror_button, "black");
+  colorElement(fire_button, "black");
+
   console.log("[Environment reset]");
 }
 
 function addRay() {
-  ray = new Ray(
+  let [x1, y1, x2, y2] = [
     parseInt(x1_input.value(), 10),
     parseInt(y1_input.value(), 10),
     parseInt(x2_input.value(), 10),
     parseInt(y2_input.value(), 10)
-  );
-  console.log("[Ray added]");
+  ];
+
+  let nan_check = !(isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2));
+  let move_check = x1 !== x2 || y1 !== y2;
+
+  if (nan_check && move_check) {
+    colorElement(ray_button, "green");
+    ray = new Ray(x1, y1, x2, y2);
+    console.log("[Ray added]");
+  } else {
+    colorElement(ray_button, "red");
+  }
 }
 
 function addMirror() {
-  let [x1, x2, y1, y2] = [
+  let [x1, y1, x2, y2] = [
     parseInt(x1_input.value(), 10),
-    parseInt(x2_input.value(), 10),
     parseInt(y1_input.value(), 10),
+    parseInt(x2_input.value(), 10),
     parseInt(y2_input.value(), 10)
   ];
-  if (x1 === x2 || y1 === y2 || abs(x2 - x1) === abs(y2 - y1)) {
+
+  let nan_check = !(isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2));
+  let axis_check = x1 === x2 || y1 === y2 || abs(x2 - x1) === abs(y2 - y1);
+
+  if (nan_check && axis_check) {
     // If correct orientation
+    colorElement(mirror_button, "green");
     mirrors.push(new Mirror(x1, y1, x2, y2));
     console.log("[Mirror added]");
+  } else {
+    colorElement(mirror_button, "red");
   }
 }
 
 function fireTheRay() {
-  console.log("[Fire]");
-  computeReflections();
-  console.log("[Earth]");
-  interval_exchange.f(ray, 999);
-  console.log("[Water]");
-}
+  let n = parseInt(n_steps_input.value(), 10);
 
-function importTest1() {
-  resetEnv();
-  createTestEnv1();
-  console.log(mirrors);
-  console.log(ray);
-}
+  colorElement(fire_button, "red");
 
-function importTest2() {
-  resetEnv();
-  createTestEnv2();
+  if (!isNaN(n) && ray !== null && mirrors.length > 0) {
+    colorElement(fire_button, "green");
+    console.log("[Fire]");
+    computeReflections();
+
+    console.log("[Earth]");
+    interval_exchange.f(ray, n);
+
+    console.log("[Water]");
+  } else {
+    colorElement(fire_button, "red");
+  }
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -503,6 +564,37 @@ function importTest2() {
   DRAW FUNCTIONS
 
 * * * * * * * * * * * * * * * * * */
+
+function draw() {
+  createCanvas(CANVAS_SIZE, CANVAS_SIZE);
+  background(230, 255, 255);
+  drawIntegerGrid();
+  drawMirrors();
+  drawRay();
+  drawSelect();
+}
+
+function colorElement(element, color) {
+  element.style(`color: ${color};`);
+}
+
+function drawSelect() {
+  let [x1, y1, x2, y2] = [
+    parseInt(x1_input.value(), 10),
+    parseInt(y1_input.value(), 10),
+    parseInt(x2_input.value(), 10),
+    parseInt(y2_input.value(), 10)
+  ];
+
+  fill("lightgreen");
+  if (!(isNaN(x1) || isNaN(y1))) {
+    ellipse(xToP5(x1), yToP5(y1), 5, 5);
+  }
+  if (!(isNaN(x2) || isNaN(y2))) {
+    ellipse(xToP5(x2), yToP5(y2), 5, 5);
+  }
+  fill("white");
+}
 
 // draws the cartesian plane
 function drawIntegerGrid() {
@@ -516,21 +608,6 @@ function drawIntegerGrid() {
       stroke(0);
     }
   }
-}
-
-/* * * * * * * * * * * * * * * * *
-
-  OTHER P5 FUNCTIONS
-
-* * * * * * * * * * * * * * * * * */
-
-function draw() {
-  const CANVAS_SIZE = 400;
-  createCanvas(CANVAS_SIZE, CANVAS_SIZE);
-  background(230, 255, 255);
-  drawIntegerGrid();
-  drawMirrors();
-  drawRay();
 }
 
 function drawMirrors() {
@@ -570,31 +647,40 @@ function drawBounceCoords() {
 }
 
 function drawRay() {
-  let msg;
-  drawRayDirections(ray);
-  stroke(255, 1, 1);
-  line(
-    xToP5(ray.start.x),
-    yToP5(ray.start.y),
-    xToP5(ray.start.x + ray.dir.x),
-    yToP5(ray.start.y + ray.dir.y)
-  );
-  ellipse(xToP5(ray.start.x), yToP5(ray.start.y), 8, 8);
-  msg = "(" + ray.start.x.toString() + "," + ray.start.y.toString() + ")";
-  text(msg, xToP5(ray.start.x) + TEXT_OFFSET, yToP5(ray.start.y) - TEXT_OFFSET);
+  if (ray !== null) {
+    let msg;
+    // drawRayDirections(ray);
+    stroke(255, 1, 1);
+    line(
+      xToP5(ray.start.x),
+      yToP5(ray.start.y),
+      xToP5(ray.start.x + ray.dir.x),
+      yToP5(ray.start.y + ray.dir.y)
+    );
+    ellipse(xToP5(ray.start.x), yToP5(ray.start.y), 8, 8);
+    msg = "(" + ray.start.x.toString() + "," + ray.start.y.toString() + ")";
+    text(
+      msg,
+      xToP5(ray.start.x) + TEXT_OFFSET,
+      yToP5(ray.start.y) - TEXT_OFFSET
+    );
 
-  stroke(0);
-
-  drawRayPath();
+    stroke(0);
+    drawRayPath();
+  }
 }
 
 function drawRayPath() {
   stroke("pink");
+  fill("pink");
   for (let i = 0; i < ray.path.length - 1; i++) {
     let start = ray.path[i];
     let end = ray.path[i + 1];
     line(xToP5(start.x), yToP5(start.y), xToP5(end.x), yToP5(end.y));
   }
+  let end = ray.path[ray.path.length - 1];
+  ellipse(xToP5(end.x), yToP5(end.y), 8, 8);
+  fill("white");
   stroke("black");
 }
 
@@ -646,5 +732,5 @@ function mousePressed() {
       y2_text.html("y2");
     }
   }
-  redraw();
+  //redraw();
 }
