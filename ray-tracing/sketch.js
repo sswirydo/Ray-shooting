@@ -5,95 +5,107 @@
   CONSTANTS AND VARS
 
 * * * * * * * * * * * * * * * * * */
+const EPSILON = 0.00001;
 const TEXT_OFFSET = 5;
 const RESOLUTION = 400;
-const GRIDS = 8 + 2;
+const GRIDS = 10 + 2;
 const BUTTON_X_SIZE = 90;
 const BUTTON_Y_SIZE = 20;
-var rays = [];
 var mirrors = [];
 var interval_exchange = null;
+var ray = null;
 var clickCount = 0;
-
-/* * * * * * * * * * * * * * * * *
-
-  CLASSES
-
-* * * * * * * * * * * * * * * * * */
-
-class Ray {
-  constructor(_xpos, _ypos, _xvector, _yvector) {
-    this.x = _xpos;
-    this.y = _ypos;
-    this.xvector = _xvector;
-    this.yvector = _yvector;
-
-    this.directions = [];
-    this._computeDirections();
-
-    // start point + each intersection in order
-    this.path = [[this.x, this.y]];
-  }
-
-  addPointToPath(x, y) {
-    this.path.push([x, y]);
-  }
-
-  getPath() {
-    return this.path;
-  }
-
-  getAllDirections() {
-    return this.directions;
-  }
-
-  _computeDirections() {
-    let x_delta = this.xvector - this.x;
-    let y_delta = this.yvector - this.y;
-
-    // FIXME only 4 directions
-    this.directions.push([x_delta, y_delta]); // +x +y (12h)
-    this.directions.push([y_delta, x_delta]); // +y +x (UP-RIGHT)
-    this.directions.push([y_delta, -x_delta]); // +y -x (3h) (RIGHT)
-    this.directions.push([x_delta, -y_delta]); // +x -y (DOWN-RIGHT)
-    this.directions.push([-x_delta, -y_delta]); // -x -y (6h) (DOWN)
-    this.directions.push([-y_delta, -x_delta]); // -y -x (DOWN-LEFT)
-    this.directions.push([-y_delta, x_delta]); // -y +x (9h) (LEFT)
-    this.directions.push([-x_delta, y_delta]); // -x +y (UP-LEFT)
-  }
-}
 
 const HORIZONTAL = 0; // -
 const VERTICAL = 1; // |
 const DIAGONAL_UP = 2; // /
 const DIAGONAL_DOWN = 3; // \
 
+/* * * * * * * * * * * * * * * * *
+
+  CLASSES
+
+* * * * * * * * * * * * * * * * * */
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  isEqual(point) {
+    return this.x === point.x && this.y === point.y;
+  }
+
+  getSquareDist(point) {
+    return (this.x - point.x) ** 2 + (this.y - point.y) ** 2;
+  }
+
+  getSlope(point) {
+    return (point.y2 - this.y) / (point.x - this.x);
+  }
+}
+
+class Ray {
+  constructor(x_pos, y_pos, x_vector, y_vector) {
+    this.start = new Point(x_pos, y_pos);
+    this.dir = new Point(x_vector - x_pos, y_vector - y_pos);
+    this.directions = this._computeDirections();
+    this.path = [this.start];
+    this.print();
+  }
+
+  addPointToPath(point) {
+    this.path.push(point);
+  }
+
+  _computeDirections() {
+    // FIXME only 4 direction
+    let directions = [];
+    directions.push(new Point(this.dir.x, this.dir.y)); // +x +y (12h)
+    directions.push(new Point(this.dir.y, this.dir.x)); // +y +x (UP-RIGHT)
+    directions.push(new Point(this.dir.y, -this.dir.x)); // +y -x (3h) (RIGHT)
+    directions.push(new Point(this.dir.x, -this.dir.y)); // +x -y (DOWN-RIGHT)
+    directions.push(new Point(-this.dir.x, -this.dir.y)); // -x -y (6h) (DOWN)
+    directions.push(new Point(-this.dir.y, -this.dir.x)); // -y -x (DOWN-LEFT)
+    directions.push(new Point(-this.dir.y, this.dir.x)); // -y +x (9h) (LEFT)
+    directions.push(new Point(-this.dir.x, this.dir.y)); // -x +y (UP-LEFT)
+    return directions;
+  }
+
+  print() {
+    console.log(
+      `Laser: from (${this.start.x},${this.start.y}) with direction (${this.dir.x},${this.dir.y})`
+    );
+  }
+}
+
 class Mirror {
-  constructor(_x1, _y1, _x2, _y2) {
-    this.x1 = _x1;
-    this.y1 = _y1;
-    this.x2 = _x2;
-    this.y2 = _y2;
+  constructor(x1, y1, x2, y2) {
+    this.start = new Point(x1, y1);
+    this.end = new Point(x2, y2);
+    this.size = max(abs(x1 - x2), abs(y1 - y2)); // nbr of unit segment
+    this.orientation = this._determineOrientation();
     this.reflective = true; //fixme
+    this.print();
   }
 
   getLength() {
-    return ((this.x2 - this.x1) ** 2 + (this.y2 - this.y1) ** 2) ** -2;
+    return this.start.getSquareDist(this.end);
   }
 
   getSlope() {
-    return (this.y2 - this.y1) / (this.x2 - this.x1);
+    return this.start.getSlope(this.end);
   }
 
-  getType() {
-    let ans = false;
-    if (this.x1 === this.x2) {
+  _determineOrientation() {
+    let ans = null;
+    if (this.start.x === this.end.x) {
       ans = VERTICAL;
-    } else if (this.y1 === this.y2) {
+    } else if (this.start.y === this.end.y) {
       ans = HORIZONTAL;
     } else if (
-      (this.x1 < this.x2 && this.y1 < this.y2) ||
-      (this.x1 > this.x2 && this.y1 > this.y2)
+      (this.start.x < this.end.x && this.start.y < this.end.y) ||
+      (this.start.x > this.end.x && this.start.y > this.end.y)
     ) {
       ans = DIAGONAL_UP;
     } else {
@@ -104,167 +116,186 @@ class Mirror {
 
   print() {
     console.log(
-      "Mirror:",
-      "\n",
-      "x1:",
-      this.x1,
-      "y1:",
-      this.y1,
-      "\n",
-      "x2:",
-      this.x2,
-      "y2:",
-      this.y2
+      `Mirror: (${this.start.x},${this.start.y}) to (${this.end.x},${this.end.y}) of size ${this.size} with orientation = ${this.orientation}`
     );
   }
 }
 
-class SlicedMirror extends Mirror {
-  constructor(mirror, ray) {
-    super(mirror.x1, mirror.y1, mirror.x2, mirror.y2);
+class Bounce {
+  constructor(in_dir, point, out_dir) {
+    this.in_dir = in_dir;
+    this.point = point;
+    this.out_dir = out_dir;
+  }
+}
 
-    // -- ARGUMENTS -- //
-    this.nb_unit_segments = max(abs(this.x2 - this.x1), abs(this.y2 - this.y1)); // number of unit segments in the mirror
-    this.slices = []; // slices [direction] [slice] [x or y coord]
+class IntegerInterval {
+  constructor(ray, mirrors) {
+    this.intervals = []; // List of 'Bounce' of the integer interval ('Bounce' contains in_dir, point, out_dir)
+    this.exchange = []; // Mapping for the intervals
 
-    // -- CONSTRUCTION -- //
-    this._slice(ray);
+    this._compute(ray, mirrors);
+    console.log("INTERVALS", this.intervals);
+    console.log("EXCHANGE", this.exchange);
   }
 
-  getAllSlices() {
-    return this.slices;
+  f(ray, n) {
+    let previous_idx = null;
+    let bounce_idx = this._getFirstBounce(ray);
+    for (let i = 0; i < n; i++) {
+      ray.addPointToPath(this.intervals[bounce_idx].point);
+      previous_idx = bounce_idx;
+      bounce_idx = this.exchange[bounce_idx];
+      if (bounce_idx === null || bounce_idx === -1) {
+        console.log(
+          "oups. ",
+          "i:",
+          i,
+          "prev:",
+          previous_idx,
+          "next:",
+          bounce_idx,
+          "next_bounce",
+          this.intervals[previous_idx]
+        );
+        break;
+      }
+    }
   }
 
-  getSlices(ray_direction) {
-    return this.slices[ray_direction];
+  _getFirstBounce(ray) {
+    let candidate = null;
+    let min_dist = +Infinity;
+    for (let idx = 0; idx < this.intervals.length; idx++) {
+      let next_bounce = this.intervals[idx];
+      if (ray.dir.isEqual(next_bounce.in_dir)) {
+        // Check same directions
+        let lambda_x = (next_bounce.point.x - ray.start.x) / ray.dir.x;
+        let lambda_y = (next_bounce.point.y - ray.start.y) / ray.dir.y;
+        if (abs(lambda_x - lambda_y) <= EPSILON && lambda_x > 0) {
+          // then candidate
+          let dist = ray.start.getSquareDist(next_bounce.point);
+          if (dist < min_dist) {
+            min_dist = dist;
+            candidate = idx;
+          }
+        }
+      }
+    }
+    return candidate;
   }
 
-  getTotalOfSlices(ray_direction) {
-    return this.slices[ray_direction].length;
-  }
-
-  _slice(ray) {
-    /*
-      TODO+FIXME: create ray-mirror intersection points
-                  that directly contain the input
-                  and the ouput ray directions
-    */
-
-    for (const direction of ray.getAllDirections()) {
-      // FIXME (optimization) use 4 directions (computations /2)
-      let ray_slope = direction[1] / direction[0];
-      let nb_slices; // number of mirror slices
-      if (this.getType() === HORIZONTAL) {
-        nb_slices = this.nb_unit_segments * abs(direction[1]); // intersections = |y|
-      } else if (this.getType() === VERTICAL) {
-        nb_slices = this.nb_unit_segments * abs(direction[0]); // intersections = |x|
-      } else if (
-        (this.getType() === DIAGONAL_UP && ray_slope > 0) ||
-        (this.getType() === DIAGONAL_DOWN && ray_slope < 0)
+  // returns idx of the first bounce
+  _OLDgetFirstBounce(ray) {
+    // ULTRA FIXME: works for 1 case only (test purpose)
+    let candidates = [];
+    for (let i = 0; i < this.intervals.length; i++) {
+      let bounce = this.intervals[i];
+      if (
+        bounce.point.x === 5.5 &&
+        bounce.point.y === 0 &&
+        bounce.in_dir.x === ray.dir.x &&
+        bounce.in_dir.y === ray.dir.y
       ) {
-        nb_slices =
-          this.nb_unit_segments * abs(abs(direction[0]) - abs(direction[1])); // intersections same slope = ||x|-|y||
+        candidates.push(i);
       } else {
-        nb_slices =
-          this.nb_unit_segments * abs(abs(direction[0]) + abs(direction[1])); // intersections opp slope = ||x|+|y||
       }
+    }
+    // console.log("Candidates length test:", candidates.length);
+    return candidates[0];
+  }
 
-      let slice_dir_coords = [[this.x1, this.y1]];
-      for (let i = 1; i <= nb_slices; i++) {
-        let lambda = i / nb_slices; // linear combination
-        slice_dir_coords.push([
-          lambda * this.x2 + (1 - lambda) * this.x1,
-          lambda * this.y2 + (1 - lambda) * this.y1
-        ]);
+  _compute(ray, mirrors) {
+    for (let dir of ray.directions) {
+      for (let mirror of mirrors) {
+        let [nb_splits, bounce_dir] = this._getAllBounces(mirror, dir);
+        this._addBounces(mirror, nb_splits, dir, bounce_dir);
       }
-      this.slices.push(slice_dir_coords);
     }
-  }
-}
-
-class IntervalExchange {
-  constructor(mirrors, ray) {
-    // -- ATTRIBUTES -- //
-    this.nb_orientations = ray.getAllDirections().length;
-    this.sliced_mirrors = [];
-    this.exchange = null;
-
-    // -- CONSTRUCTION -- //
-    //this._createFakeEscapeMirror();
-    this._divideMirrors(mirrors, ray);
-    this._formBigIntInterval();
-    this._map();
-    //this._optimiseWithTopology();
+    this._computeMapping();
   }
 
-  _optimiseWithTopology() {}
-  getNext(mirror, slope) {}
-  getPrevious(mirror, slope) {}
-  _createFakeEscapeMirror() {}
-
-  /*
-    "Count positions at which a ray of that slope can hit."
-  */
-  _divideMirrors(mirrors, ray) {
-    for (const mirror of mirrors) {
-      this.sliced_mirrors.push(new SlicedMirror(mirror, ray));
-    }
-  }
-
-  /*
-    "Concatenate all these sequences of positions
-    for (mirror, slope) pairs into one big integer interval."
-  */
-  _formBigIntInterval() {}
-
-  /*
-    "Form subintervals for where a reflected ray will go next."
-  */
-  _map(ray) {}
-
-}
-
-class ReflectivePoint {
-  constructor(x, y, input_orientation, output_orientation) {
-    this.x = x;
-    this.y = y;
-    this.input = input_orientation;
-    this.output = output_orientation;
-  }
-}
-
-/* bah quoi.. dans tous les cas t'as dis tu vas refactor.. */
-class Transformer {
-  static inputRayToOutputRay(input_ray, mirror) {
-    let output_ray = null;
-    let is_horizontal = mirror.getType() === HORIZONTAL;
-    let is_vertical = mirror.getType() === VERTICAL;
-    let is_rising =
-      (this.getType() === DIAGONAL_UP && ray_slope > 0) ||
-      (this.getType() === DIAGONAL_DOWN && ray_slope < 0);
-
-    if (is_horizontal) {
-    } else if (is_vertical) {
-    } else if (is_rising) {
+  _getAllBounces(mirror, dir) {
+    if (mirror.orientation === HORIZONTAL) {
+      return [mirror.size * abs(dir.y), new Point(dir.x, -dir.y)];
+    } else if (mirror.orientation === VERTICAL) {
+      return [mirror.size * abs(dir.x), new Point(-dir.x, dir.y)];
+    } else if (mirror.orientation === DIAGONAL_UP) {
+      if (dir.x * dir.y > 0) {
+        return [
+          mirror.size * abs(abs(dir.x) - abs(dir.y)),
+          new Point(dir.y, dir.x)
+        ];
+      } else {
+        return [
+          mirror.size * abs(abs(dir.x) + abs(dir.y)),
+          new Point(dir.y, dir.x)
+        ];
+      }
+    } else if (mirror.orientation === DIAGONAL_DOWN) {
+      if (dir.x * dir.y < 0) {
+        return [
+          mirror.size * abs(abs(dir.x) - abs(dir.y)),
+          new Point(-dir.y, -dir.x)
+        ];
+      } else {
+        return [
+          mirror.size * abs(abs(dir.x) + abs(dir.y)),
+          new Point(-dir.y, -dir.x)
+        ];
+      }
     } else {
+      console.error("Unexpected case (fct: _getAllBounces())");
+      // throw "Unexpected case (fct: _getAllBounces())";
     }
-
-    return output_ray;
   }
-}
 
-class Node {
-  constructor(x, y, input_orientation, mirror) {
-    this.x = x;
-    this.y = y;
+  _addBounces(mirror, nb_splits, in_dir, out_dir) {
+    this.intervals.push(new Bounce(in_dir, mirror.start, null)); // miroir endpoint does not reflects
+    for (let i = 1; i < nb_splits; i++) {
+      let lambda = i / nb_splits;
+      let point = new Point(
+        lambda * mirror.end.x + (1 - lambda) * mirror.start.x,
+        lambda * mirror.end.y + (1 - lambda) * mirror.start.y
+      );
+      this.intervals.push(new Bounce(in_dir, point, out_dir));
+    }
+    this.intervals.push(new Bounce(in_dir, mirror.end, null)); // miroir endpoint does not reflects
+  }
 
-    this.input_orientation = input_orientation;
-    this.output_orientation = null;
+  _computeMapping() {
+    for (let bounce of this.intervals) {
+      this.exchange.push(this._getNext(bounce));
+    }
+  }
 
-    this.next_node = null;
-    this.previous_node = null;
-
-    this.mirror = mirror;
+  _getNext(bounce) {
+    if (!bounce.out_dir) {
+      // If no bounce
+      return -1;
+    }
+    // Optimize with dico
+    let candidate = null;
+    let min_dist = +Infinity;
+    for (let idx = 0; idx < this.intervals.length; idx++) {
+      let next_bounce = this.intervals[idx];
+      if (bounce.out_dir.isEqual(next_bounce.in_dir)) {
+        // Check same directions
+        let lambda_x =
+          (next_bounce.point.x - bounce.point.x) / bounce.out_dir.x;
+        let lambda_y =
+          (next_bounce.point.y - bounce.point.y) / bounce.out_dir.y;
+        if (abs(lambda_x - lambda_y) <= EPSILON && lambda_x > 0) {
+          // then candidate
+          let dist = bounce.point.getSquareDist(next_bounce.point);
+          if (dist < min_dist) {
+            min_dist = dist;
+            candidate = idx;
+          }
+        }
+      }
+    }
+    return candidate;
   }
 }
 
@@ -297,7 +328,7 @@ function yToP5(y) {
 }
 
 function computeReflections() {
-  interval_exchange = new IntervalExchange(mirrors, rays[0]);
+  interval_exchange = new IntegerInterval(ray, mirrors);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -322,7 +353,7 @@ function createTestEnv1() {
   mirrors.push(new Mirror(0, 0, 0, 2)); // AB
   mirrors.push(new Mirror(0, 2, 2, 2)); // BC
   mirrors.push(new Mirror(2, 2, 1, 0)); // CD
-  rays.push(new Ray(1, 1, -2 + 1, 1 + 1));
+  ray = new Ray(1, 1, -2 + 1, 1 + 1);
 }
 
 function createTestEnv2() {
@@ -342,7 +373,7 @@ function createTestEnv2() {
   mirrors.push(new Mirror(5, 4, 6, 3)); // CD
   mirrors.push(new Mirror(6, 3, 6, 2)); // DE
   mirrors.push(new Mirror(6, 0, 0, 0)); // FA
-  rays.push(new Ray(7, 3, 6, 1));
+  ray = new Ray(7, 3, 6, 1);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -405,44 +436,61 @@ function makeButton(name, xpos, ypox, foo) {
 }
 
 function resetEnv() {
-  rays = [];
+  console.clear();
+  ray = null;
   mirrors = [];
   interval_exchange = null;
+
+  clickCount = 0;
+  x1_input.value("");
+  y1_input.value("");
+  x2_input.value("");
+  y2_input.value("");
+  x1_text.html("x1 ←");
+  y1_text.html("y1 ←");
+  x2_text.html("x2");
+  y2_text.html("y2");
+
   console.log("[Environment reset]");
 }
 
 function addRay() {
-  rays.push(
-    new Ray(
-      parseInt(x1_input.value(), 10),
-      parseInt(y1_input.value(), 10),
-      parseInt(x2_input.value(), 10),
-      parseInt(y2_input.value(), 10)
-    )
+  ray = new Ray(
+    parseInt(x1_input.value(), 10),
+    parseInt(y1_input.value(), 10),
+    parseInt(x2_input.value(), 10),
+    parseInt(y2_input.value(), 10)
   );
   console.log("[Ray added]");
 }
 
 function addMirror() {
-  mirrors.push(
-    new Mirror(
-      parseInt(x1_input.value(), 10),
-      parseInt(y1_input.value(), 10),
-      parseInt(x2_input.value(), 10),
-      parseInt(y2_input.value(), 10)
-    )
-  );
-  console.log("[Mirror added]");
+  let [x1, x2, y1, y2] = [
+    parseInt(x1_input.value(), 10),
+    parseInt(x2_input.value(), 10),
+    parseInt(y1_input.value(), 10),
+    parseInt(y2_input.value(), 10)
+  ];
+  if (x1 === x2 || y1 === y2 || abs(x2 - x1) === abs(y2 - y1)) {
+    // If correct orientation
+    mirrors.push(new Mirror(x1, y1, x2, y2));
+    console.log("[Mirror added]");
+  }
 }
 
 function fireTheRay() {
   console.log("[Fire]");
   computeReflections();
+  console.log("[Earth]");
+  interval_exchange.f(ray, 999);
+  console.log("[Water]");
 }
 
 function importTest1() {
   resetEnv();
   createTestEnv1();
+  console.log(mirrors);
+  console.log(ray);
 }
 
 function importTest2() {
@@ -489,28 +537,33 @@ function drawMirrors() {
   let msg1, msg2;
   for (const mirror of mirrors) {
     line(
-      xToP5(mirror.x1),
-      yToP5(mirror.y1),
-      xToP5(mirror.x2),
-      yToP5(mirror.y2)
+      xToP5(mirror.start.x),
+      yToP5(mirror.start.y),
+      xToP5(mirror.end.x),
+      yToP5(mirror.end.y)
     );
-    drawMirrorSlices();
-    msg1 = "(" + mirror.x1.toString() + "," + mirror.y1.toString() + ")";
-    msg2 = "(" + mirror.x2.toString() + "," + mirror.y2.toString() + ")";
-    text(msg1, xToP5(mirror.x1) + TEXT_OFFSET, yToP5(mirror.y1) - TEXT_OFFSET);
-    text(msg2, xToP5(mirror.x2) + TEXT_OFFSET, yToP5(mirror.y2) - TEXT_OFFSET);
+    drawBounceCoords();
+    msg1 =
+      "(" + mirror.start.x.toString() + "," + mirror.start.y.toString() + ")";
+    msg2 = "(" + mirror.end.x.toString() + "," + mirror.end.y.toString() + ")";
+    text(
+      msg1,
+      xToP5(mirror.start.x) + TEXT_OFFSET,
+      yToP5(mirror.start.y) - TEXT_OFFSET
+    );
+    text(
+      msg2,
+      xToP5(mirror.end.x) + TEXT_OFFSET,
+      yToP5(mirror.end.y) - TEXT_OFFSET
+    );
   }
 }
 
-function drawMirrorSlices() {
-  if (interval_exchange !== null) {
+function drawBounceCoords() {
+  if (interval_exchange) {
     stroke(1, 1, 255);
-    for (const sliced_mirror of interval_exchange.sliced_mirrors) {
-      for (const slice_per_ray_dir of sliced_mirror.getAllSlices()) {
-        for (const slice of slice_per_ray_dir) {
-          ellipse(xToP5(slice[0]), yToP5(slice[1]), 4, 4);
-        }
-      }
+    for (let bounce of interval_exchange.intervals) {
+      ellipse(xToP5(bounce.point.x), yToP5(bounce.point.y), 4, 4);
     }
     stroke(0);
   }
@@ -518,15 +571,31 @@ function drawMirrorSlices() {
 
 function drawRay() {
   let msg;
-  for (const ray of rays) {
-    drawRayDirections(ray);
-    stroke(255, 1, 1);
-    line(xToP5(ray.x), yToP5(ray.y), xToP5(ray.xvector), yToP5(ray.yvector));
-    ellipse(xToP5(ray.x), yToP5(ray.y), 8, 8);
-    msg = "(" + ray.x.toString() + "," + ray.y.toString() + ")";
-    text(msg, xToP5(ray.x) + TEXT_OFFSET, yToP5(ray.y) - TEXT_OFFSET);
-  }
+  drawRayDirections(ray);
+  stroke(255, 1, 1);
+  line(
+    xToP5(ray.start.x),
+    yToP5(ray.start.y),
+    xToP5(ray.start.x + ray.dir.x),
+    yToP5(ray.start.y + ray.dir.y)
+  );
+  ellipse(xToP5(ray.start.x), yToP5(ray.start.y), 8, 8);
+  msg = "(" + ray.start.x.toString() + "," + ray.start.y.toString() + ")";
+  text(msg, xToP5(ray.start.x) + TEXT_OFFSET, yToP5(ray.start.y) - TEXT_OFFSET);
+
   stroke(0);
+
+  drawRayPath();
+}
+
+function drawRayPath() {
+  stroke("pink");
+  for (let i = 0; i < ray.path.length - 1; i++) {
+    let start = ray.path[i];
+    let end = ray.path[i + 1];
+    line(xToP5(start.x), yToP5(start.y), xToP5(end.x), yToP5(end.y));
+  }
+  stroke("black");
 }
 
 windowResized = function () {
@@ -535,20 +604,20 @@ windowResized = function () {
 
 function drawRayDirections(ray) {
   let count = 0;
-  for (const dir of ray.getAllDirections()) {
+  for (const dir of ray.directions) {
     stroke(1, 255, 1);
     line(
-      xToP5(ray.x),
-      yToP5(ray.y),
-      xToP5(ray.x + dir[0]),
-      yToP5(ray.y + dir[1])
+      xToP5(ray.start.x),
+      yToP5(ray.start.y),
+      xToP5(ray.start.x + dir.x),
+      yToP5(ray.start.y + dir.y)
     );
     let msg = "[" + count.toString() + "]";
     fill("black");
     text(
       msg,
-      xToP5(ray.x + dir[0]) + TEXT_OFFSET,
-      yToP5(ray.y + dir[1]) + TEXT_OFFSET
+      xToP5(ray.x + dir.x) + TEXT_OFFSET,
+      yToP5(ray.y + dir.y) + TEXT_OFFSET
     );
     count++;
     fill("white");
@@ -577,4 +646,5 @@ function mousePressed() {
       y2_text.html("y2");
     }
   }
+  redraw();
 }
