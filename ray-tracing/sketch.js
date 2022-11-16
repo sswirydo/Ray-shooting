@@ -153,7 +153,7 @@ class IntegerInterval {
     console.log("EXCHANGE", this.exchange);
   }
 
-  _testFindBounce(x, y) {
+  _debugTestFindBounce(x, y) {
     for (let idx = 0; idx < this.intervals.length; idx++) {
       let bounce = this.intervals[idx];
       if (bounce.point.x === x && bounce.point.y === y) {
@@ -165,13 +165,12 @@ class IntegerInterval {
   }
 
   f(ray, n) {
-    // this._testFindBounce(ray, 2, 9);
-
+    // this._debugTestFindBounce(ray, 2, 9);
     let previous_idx = null;
     let bounce_idx = this._getFirstBounce(ray);
     if (bounce_idx) {
       for (let i = 0; i < n; i++) {
-        console.log("ramen:", bounce_idx);
+        // TODO : stop loop if ray re-enters same path
         ray.addPointToPath(this.intervals[bounce_idx].point);
         previous_idx = bounce_idx;
         bounce_idx = this.exchange[bounce_idx];
@@ -203,9 +202,7 @@ class IntegerInterval {
       let next_bounce = this.intervals[idx];
       if (ray.dir.isEqual(next_bounce.in_dir)) {
         // Check same directions
-        let lambda_x = (next_bounce.point.x - ray.start.x) / ray.dir.x;
-        let lambda_y = (next_bounce.point.y - ray.start.y) / ray.dir.y;
-        if (abs(lambda_x - lambda_y) <= EPSILON && lambda_x > 0) {
+        if (this._areAlign(ray.start, next_bounce.point, ray.dir)) {
           // then candidate
           let dist = ray.start.getSquareDist(next_bounce.point);
           if (dist < min_dist) {
@@ -216,6 +213,27 @@ class IntegerInterval {
       }
     }
     return candidate;
+  }
+
+  _areAlign(start, end, dir) {
+    if (dir.x === 0) {
+      // if vertical direction
+      // Check direction
+      if ((dir.y > 0 && end.y > start.y) || (dir.y < 0 && end.y < start.y)) {
+        return abs(end.x - start.x) < EPSILON;
+      }
+    } else if (dir.y === 0) {
+      // if horizontal direction
+      // Check direction
+      if ((dir.x > 0 && end.x > start.x) || (dir.x < 0 && end.x < start.x)) {
+        return abs(end.y - start.y) < EPSILON;
+      }
+    } else {
+      let lambda_x = (end.x - start.x) / dir.x;
+      let lambda_y = (end.y - start.y) / dir.y;
+      return abs(lambda_x - lambda_y) < EPSILON && lambda_x > 0;
+    }
+    return false;
   }
 
   _compute(ray, mirrors) {
@@ -293,11 +311,7 @@ class IntegerInterval {
       let next_bounce = this.intervals[idx];
       if (bounce.out_dir.isEqual(next_bounce.in_dir)) {
         // Check same directions
-        let lambda_x =
-          (next_bounce.point.x - bounce.point.x) / bounce.out_dir.x;
-        let lambda_y =
-          (next_bounce.point.y - bounce.point.y) / bounce.out_dir.y;
-        if (abs(lambda_x - lambda_y) <= EPSILON && lambda_x > 0) {
+        if (this._areAlign(bounce.point, next_bounce.point, bounce.out_dir)) {
           // then candidate
           let dist = bounce.point.getSquareDist(next_bounce.point);
           if (dist < min_dist) {
@@ -671,8 +685,8 @@ function drawRay() {
 }
 
 function drawRayPath() {
-  stroke("pink");
-  fill("pink");
+  fill("purple");
+  stroke("purple");
   for (let i = 0; i < ray.path.length - 1; i++) {
     let start = ray.path[i];
     let end = ray.path[i + 1];
@@ -680,8 +694,8 @@ function drawRayPath() {
   }
   let end = ray.path[ray.path.length - 1];
   ellipse(xToP5(end.x), yToP5(end.y), 8, 8);
-  fill("white");
   stroke("black");
+  fill("white");
 }
 
 windowResized = function () {
