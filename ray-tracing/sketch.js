@@ -27,6 +27,9 @@ const VERTICAL = 1; // |
 const DIAGONAL_UP = 2; // /
 const DIAGONAL_DOWN = 3; // \
 
+const REFLECTIVE = true;
+const NON_REFLECTIVE = false;
+
 /* * * * * * * * * * * * * * * * *
 
   CLASSES
@@ -94,13 +97,19 @@ class Ray {
 }
 
 class Mirror {
-  constructor(x1, y1, x2, y2) {
+  constructor(x1, y1, x2, y2, reflective = true) {
     this.start = new Point(x1, y1);
     this.end = new Point(x2, y2);
     this.size = max(abs(x1 - x2), abs(y1 - y2)); // nbr of unit segment
     this.orientation = this._determineOrientation();
-    this.reflective = true; //fixme
     this.print();
+
+    // actually EACH SIDE of the mirror
+    // COULD be marked as reflective or non reflective
+    // but we simplified it to both side
+    // as it would unecesserily complicate
+    // the implementation for not much
+    this.is_reflective = reflective;
   }
 
   getLength() {
@@ -143,12 +152,79 @@ class Bounce {
   }
 }
 
+class Interval {
+  construcor() {
+    this.start_idx = null;
+    this.end_idx = null;
+  }
+}
+
+class TriangulatedSurface {
+  constructor(integer_interval) {
+    this.integer_interval = integer_interval;
+    this.surface_width = null;
+    this.surface_height = null;
+
+    this.triangles = null;
+    this.surface = null;
+  }
+
+  _createSurface(input_layer, output_layer) {
+    // problème, techniquement,
+    // nous avons plutôt des points et pas des intervalles
+    // à quel point est-ce important ?
+    // ou alors intervalle (de bounce) <=> par miroir er par in_slope
+    // mais est-ce vraiment nécessaire ?
+  }
+  _triangulate(surface) {}
+  _glue() {
+    // pour pouvoir loop vers l'infini
+    // faut juste s'assurer d'avoir une belle bijection
+    // (notamment avec les rayons qui s'arrêtent)
+  }
+  _computeNormalCoordinates() {}
+  _computeNormalArc() {}
+  _convert() {}
+}
+
 class IntegerInterval {
   constructor(ray, mirrors) {
     this.intervals = []; // List of 'Bounce' of the integer interval ('Bounce' contains in_dir, point, out_dir)
     this.exchange = []; // Mapping for the intervals
 
-    this._compute(ray, mirrors);
+    let bbox = [
+      new Mirror(
+        xToGrid(0),
+        yToGrid(0),
+        xToGrid(CANVAS_SIZE),
+        yToGrid(0),
+        NON_REFLECTIVE
+      ),
+      new Mirror(
+        xToGrid(CANVAS_SIZE),
+        yToGrid(0),
+        xToGrid(CANVAS_SIZE),
+        yToGrid(CANVAS_SIZE),
+        NON_REFLECTIVE
+      ),
+      new Mirror(
+        xToGrid(CANVAS_SIZE),
+        yToGrid(CANVAS_SIZE),
+        xToGrid(0),
+        yToGrid(CANVAS_SIZE),
+        NON_REFLECTIVE
+      ),
+      new Mirror(
+        xToGrid(0),
+        yToGrid(CANVAS_SIZE),
+        xToGrid(0),
+        yToGrid(0),
+        NON_REFLECTIVE
+      )
+    ];
+    let mirrors_and_bbox = bbox.concat(mirrors);
+
+    this._compute(ray, mirrors_and_bbox);
     console.log("INTERVALS", this.intervals);
     console.log("EXCHANGE", this.exchange);
   }
@@ -164,28 +240,20 @@ class IntegerInterval {
     }
   }
 
+  // technically,
+  // the function should be called n-times,
+  // rather than looping n times
   f(ray, n) {
     // this._debugTestFindBounce(ray, 2, 9);
     let previous_idx = null;
     let bounce_idx = this._getFirstBounce(ray);
     if (bounce_idx) {
       for (let i = 0; i < n; i++) {
-        // TODO : stop loop if ray re-enters same path
+        // TODO : stop loop if ray re-enters same path (?)
         ray.addPointToPath(this.intervals[bounce_idx].point);
         previous_idx = bounce_idx;
         bounce_idx = this.exchange[bounce_idx];
         if (bounce_idx === null || bounce_idx === -1) {
-          console.log(
-            "oups. ",
-            "i:",
-            i,
-            "prev:",
-            previous_idx,
-            "next:",
-            bounce_idx,
-            "next_bounce",
-            this.intervals[previous_idx]
-          );
           break;
         }
       }
@@ -193,6 +261,7 @@ class IntegerInterval {
       console.log(">> Ray does not intersect any mirror.");
       ray.print();
     }
+    return i;
   }
 
   _getFirstBounce(ray) {
@@ -288,7 +357,11 @@ class IntegerInterval {
         lambda * mirror.end.x + (1 - lambda) * mirror.start.x,
         lambda * mirror.end.y + (1 - lambda) * mirror.start.y
       );
-      this.intervals.push(new Bounce(in_dir, point, out_dir));
+      if (mirror.is_reflective) {
+        this.intervals.push(new Bounce(in_dir, point, out_dir));
+      } else {
+        this.intervals.push(new Bounce(in_dir, point, null));
+      }
     }
     this.intervals.push(new Bounce(in_dir, mirror.end, null)); // miroir endpoint does not reflects
   }
@@ -399,6 +472,34 @@ function createTestEnv2() {
   ray = new Ray(2, 4, 2, 6);
 }
 
+function createTestEnv3() {
+  // basically test 1 but with CD non-reflective
+  mirrors.push(new Mirror(0, 0, 4, 4)); // AB
+  mirrors.push(new Mirror(4, 4, 5, 4)); // BC
+  mirrors.push(new Mirror(5, 4, 6, 3, NON_REFLECTIVE)); // CD
+  mirrors.push(new Mirror(6, 3, 6, 2)); // DE
+  mirrors.push(new Mirror(6, 0, 0, 0)); // FA
+  ray = new Ray(7, 3, 6, 1);
+}
+
+function createTestEnv4() {
+  // basically test 1 but only using 1 unit len mirrors
+  mirrors.push(new Mirror(0, 0, 1, 1)); // AB
+  mirrors.push(new Mirror(1, 1, 2, 2)); // AB
+  mirrors.push(new Mirror(2, 2, 3, 3)); // AB
+  mirrors.push(new Mirror(3, 3, 4, 4)); // AB
+  mirrors.push(new Mirror(4, 4, 5, 4)); // BC
+  mirrors.push(new Mirror(5, 4, 6, 3)); // CD
+  mirrors.push(new Mirror(6, 3, 6, 2)); // DE
+  mirrors.push(new Mirror(6, 0, 5, 0)); // FA
+  mirrors.push(new Mirror(5, 0, 4, 0)); // FA
+  mirrors.push(new Mirror(4, 0, 3, 0)); // FA
+  mirrors.push(new Mirror(3, 0, 2, 0)); // FA
+  mirrors.push(new Mirror(2, 0, 1, 0)); // FA
+  mirrors.push(new Mirror(1, 0, 0, 0)); // FA
+  ray = new Ray(7, 3, 6, 1);
+}
+
 /* * * * * * * * * * * * * * * * *
 
   SETUP FUNCTION
@@ -429,7 +530,11 @@ function setup() {
   y1_text.position(y1_input.x + y1_input.width + 5, y1_input.y - 20);
   x2_text.position(x2_input.x + x2_input.width + 5, x2_input.y - 20);
   y2_text.position(y2_input.x + y2_input.width + 5, y2_input.y - 20);
+
   mirror_button = makeButton("Add Mirror", 425, 20 + 25 * 6, addMirror);
+  mirror_checkbox = createCheckbox("reflective", true);
+  mirror_checkbox.position(425 + mirror_button.width, 20 + 25 * 6);
+
   ray_button = makeButton("Add Ray", 425, 20 + 25 * 7, addRay);
 
   n_steps_input = makeInput(425, 20 + 25 * 9, N_STEPS_DEFAULT);
@@ -445,9 +550,11 @@ function setup() {
   test_select.size(BUTTON_X_SIZE, BUTTON_Y_SIZE);
   test_select.position(425, 20 + 25 * 12);
   test_select.changed(selectHandler);
-  test_select.option("None");
-  test_select.option("Test 1");
-  test_select.option("Test 2");
+  test_select.option("None", 0);
+  test_select.option("Test 1: article reference", 1);
+  test_select.option("Test 2: loop", 2);
+  test_select.option("Test 3: article + non-reflective", 3);
+  test_select.option("Test 4: article + 1 unit len", 4);
 
   test_text = createElement("h3", "tests");
   test_text.position(test_select.x + test_select.width + 5, test_select.y - 20);
@@ -474,14 +581,21 @@ function makeInput(xpos, ypos, defaultText = "") {
   return input;
 }
 
+// Tests
 function selectHandler() {
   resetEnv();
   switch (test_select.value()) {
-    case "Test 1":
+    case "1":
       createTestEnv1();
       break;
-    case "Test 2":
+    case "2":
       createTestEnv2();
+      break;
+    case "3":
+      createTestEnv3();
+      break;
+    case "4":
+      createTestEnv4();
       break;
     default:
   }
@@ -545,9 +659,9 @@ function addMirror() {
   let axis_check = x1 === x2 || y1 === y2 || abs(x2 - x1) === abs(y2 - y1);
 
   if (nan_check && axis_check) {
-    // If correct orientation
+    let is_reflective = mirror_checkbox.checked();
     colorElement(mirror_button, "green");
-    mirrors.push(new Mirror(x1, y1, x2, y2));
+    mirrors.push(new Mirror(x1, y1, x2, y2, is_reflective));
     console.log("[Mirror added]");
   } else {
     colorElement(mirror_button, "red");
@@ -627,12 +741,16 @@ function drawIntegerGrid() {
 function drawMirrors() {
   let msg1, msg2;
   for (const mirror of mirrors) {
+    if (!mirror.is_reflective) {
+      stroke("orange");
+    }
     line(
       xToP5(mirror.start.x),
       yToP5(mirror.start.y),
       xToP5(mirror.end.x),
       yToP5(mirror.end.y)
     );
+    stroke("black");
     drawBounceCoords();
     msg1 =
       "(" + mirror.start.x.toString() + "," + mirror.start.y.toString() + ")";
