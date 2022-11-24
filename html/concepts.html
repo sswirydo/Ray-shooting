@@ -4,47 +4,146 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/style.css">
   <title>Concepts</title>
 </head>
 <body>
 
   <div class="sidebar">
-    <a class="" href="/index.html">Home</a>
-    <a class="active" href="/html/concepts.html">Concepts</a>
-    <a class="" href="/html/tool.html">Tool (WIP)</a>
-    <a class="" href="/html/references.html">References</a>
+    <a class="" href="../index.html">Home</a>
+    <a class="active" href="concepts.html">Concepts</a>
+    <a class="" href="tool.html">Tool (WIP)</a>
+    <a class="" href="references.html">References</a>
   </div>
 
   <div class="content">
-    <!-- Interval Exchange (ie. mirror) -->
-    <!-- Partial Interval Exchange (ie. escape to infinity and beyond) -->
-    <!-- Iterated Interval Exchange (ie. recursion) -->
-    <!-- Fast Iterated Interval Exchange (ie. Topology) -->
+    <!-- TODO: fix header hierarchy -->
+    <!--
+      0th: intro
+      1st: the subject and main ideas.
+      2nd: bijection and interval exchange
+      3rd: iterated interval exchange
+      4th: the fast-iterated interval exchange (topology)
+      5th: link the simple mirror problem to this reduction
+      6th: extend with the complete mirror problem and tell about the partial integer idea
+      7th: conclude
+     -->
 
-    <h1>Ray tracing</h1> <!-- Intro -->
-    <p>...</p>
+    <h1>Avant-propos</h1>
+      <ul>
+        <li>This project and especially the current page are currently work in progress thus expect changes to be made.</li>
+        <li>The below work closely follows the work of David Eppstein. See <a href="references.html">References</a> page.</li>
+      </ul>
 
-    <h1>Reflections in an Octagonal Mirror Maze </h1> <!-- Article -->
-    <p>...</p>
+    <h1>Introduction</h1>
+      <div class='todo'><strong>TODO:</strong> Rewrite, especially the computer graphics part.</div>
+      <p>
+        In computer graphics,
+        we are often given a 3D-space containing a set of triangles
+        that we further want to render on a computer's screen.
+        One of the main tasks is to determine what color will each on-screen pixel take,
+        which is mostly determined by the object we want to render.
+        While we could simply attribute a basic color to each object,
+        in order to obtain more realistic visualizations,
+        the most common technique is to resort to ray-tracing.
+      </p>
+      <p>
+        Its idea it to start from the object we desire to render,
+        and then explore different incoming light rays that land and on it,
+        and finally blend their colors together in order to obtain the final color.
+        However, it is not especially a simple task, or at least not fast when implemented simply.
+        The number of possible incoming rays is nearly countless,
+        collision detection (or ray-object intersection) is required in order to know what object the ray hit,
+        what colors it mixed, take into account the number of reflections for intensity, and eventually what direction it went.
+        And the whole process has to be repeated recursively for each reflection.
+      </p>
+
+      <p>
+        The article we choose to present might not actually be especially useful for actual computer graphics,
+        but it shares some of those ideas.
+        We have a light ray, a set of mirrors, and we want to know where the ray will end up.
+        Will it disappear somewhere ? Will it manage to escape a mirror labyrinth or will it loop infinitely.
+      </p>
+
+      <p>
+        The problem will present some simplifications:
+        <ol>
+          <li>Mirrors have integer endpoints.</li>
+          <li>Mirrors can only be horizontal, vertical, or diagonal (45°) regarding the grid.</li>
+          <li>The ray is represented as a vector,
+              whose starting position and direction are specified by integer values.
+              this also means that when it is translated, it has to pass through an integer point.
+          </li>
+          <li>
+            Mirrors' endpoints, i.e. the start and end positions of each mirror segment, do not reflect the ray.
+            When a ray hits such points it is absorbed and thus stops its journey.
+          </li>
+
+        </ol>
+        With this establish, there we obtain some simple but important properties:
+        <div class='todo'><strong>TODO:</strong> Add examples to illustrate.</div>
+
+        <ol>
+          <li>Since the mirrors have only 4 possible slopes,
+            all our rays can be reflected in at most 8 possible directions.
+          </li>
+          <li>Given a ray going in a specified direction,
+            it can hit any mirror in only a finite number of positions.</li>
+          <li>(fixme: cite infinitely many in/out grid points?) </li>
+        </ol>
+
+        Which in summary will give us a system like represented by the image below,
+        where the ray start at (7,3) (red circle),
+        is reflected by mirrors represented by the blue lines,
+        and escape through the right-down corner.
+        Note that the blue circles represent all the possible positions
+        that the light ray going in the (-1,-2) direction can hit.
+        <figure>
+          <img style="width: 350px; height: auto;" src='../images/figures/article-figure-in-tool.png' alt='missing' />
+          <figcaption></figcaption>
+        </figure>
+      </p>
+
+    <h1>Bijection, interval exchange, iterated interval exchange</h1>
+      As the overall context is now established, we are ready to explore some more interesting concepts.
+
+      <h2>Bijection</h2>
+        As a reminder, the idea of a bijection is, given input and output sets,
+        to join each input elements to an output element and vice versa for instance using a line,
+        making sure each input and each output element has one and only one incoming or outcoming line.
+        ...
 
       <h2>Interval exchange</h2>
-      <p>...</p>
+        ...
 
-      <h2>From mirrors to interval exchange</h2>
-      <p>...</p>
+    <h1>Fast iterated interval exchange using topology</h1>
 
-      <h2>Iterated interval exchange</h2>
-      <p>...</p>
+      <figure>
+        <img style="width: 350px; height: auto;" src='../images/figures/3-Figure2-1.png' alt='missing' />
+        <figcaption>
+          Interval exchange as triangulated manifold
+          (figure from "<a href="https://arxiv.org/pdf/2112.11607.pdf">The Complexity of Iterated Reversible Computation</a>")
+        </figcaption>
+      </figure>
 
-      <h2>Partial integer interval exchange</h2>
-      <p>...</p>
+      <h2>Interval exchange as triangulated surface</h2>
+        ...
+      <h2>Normal curve, normal coordinates, arc coordinates, edge coordinates</h2>
+        ...
 
-      <h2>Interval exchange to topology</h2>
-      <p>...</p>
 
-    <h1>Ideas and Applications <h1> <!-- Conclusion -->
-    <p>...</p>
+    <h1>Problem reduction</h1>
+
+      <h2>Mirror environment as interval exchange</h2>
+        ...
+      <h2>Partial exchange</h2>
+        ...
+
+    <h1>Conclusion</h1>
+
+
+
 
   </div>
 

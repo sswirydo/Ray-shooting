@@ -1,0 +1,16 @@
+
+p {
+  text-align: justify;
+}
+
+
+/* source: https://www.w3schools.com/howto/howto_css_notes.asp */
+.info {
+  background-color: #e7f3fe;
+  border-left: 6px solid #2196F3;
+}
+
+.todo {
+  background-color: #ffcf54;
+  border-left: 6px solid #ea991f;
+}

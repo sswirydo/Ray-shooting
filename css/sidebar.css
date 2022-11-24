@@ -1,6 +1,4 @@
-/* SOURCE: */
-/* https://www.w3schools.com/howto/howto_css_sidebar_responsive.asp */
-
+/* source: https://www.w3schools.com/howto/howto_css_sidebar_responsive.asp */
 
 /* The side navigation menu */
 .sidebar {
@@ -37,13 +35,6 @@
   div.content {
     margin-left: 200px;
     padding: 1px 16px;
-  }
-
-  div.ray {
-    height: 97.5vh;
-    background-image: url("/images/francesco-califano-nRAXTImpm4k-unsplash.jpg");
-    background-size: 100% 100%;
-
   }
 
   /* On screens that are less than 700px wide, make the sidebar into a topbar */
