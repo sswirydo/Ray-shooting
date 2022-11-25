@@ -108,40 +108,86 @@
     <h1>Bijection, interval exchange, iterated interval exchange</h1>
       As the overall context is now established, we are ready to explore some more interesting concepts.
 
-      <h2>Bijection</h2>
-        As a reminder, the idea of a bijection is, given input and output sets,
+      <p>
+        As a reminder, the idea of a <strong>bijection</strong> is, given input and output sets,
         to join each input elements to an output element and vice versa for instance using a line,
         making sure each input and each output element has one and only one incoming or outcoming line.
-        ...
+      </p>
 
-      <h2>Interval exchange</h2>
+      <p>
+        The idea behind an <strong>integer interval exchange transformation</strong> is to divide an interval of integers into subintervals.
+        Those subintervals and then permuted (rearranged).
         ...
+      </p>
+
+      <p>
+        Returning back to our mirror problem, it could be viewed as such a exchange transformation.
+        ...
+      </p>
 
     <h1>Fast iterated interval exchange using topology</h1>
 
+      <!--
+        Should we say a few words about binary inputs and gates
+        or is it overkill ?
+        ..especially since we do not explicitly make usage of those concepts
+        nor study the actual computational complexity.
+       -->
+
+      <p>
+        In order to make the iterated exchange process faster,
+        the proposed idea is to reduce the transformation into a problem of computational topology.
+      </p>
+
+      <h2>Interval exchange as triangulated surface</h2>
+      <p>
+        As illustrated by the image below,
+        the idea is to place the initial interval and its decomposition into subintervals at the top,
+        the corresponding permutation of those subintervals at the bottom.
+        Then, we glue each subinterval with its corresponding subinterval after permutation.
+        For instance, the top <b>a</b> subinterval is joined with the bottom <b>a</b> subinterval.
+        As such, if we start at a specific integer at the top line and descend vertically,
+        we will end up at another integer position of the top line.
+        If we start at top position 0 (a subinterval) and descend into bot position 0 (b subinterval),
+        we will come back to the top at position 4 (b subinterval).
+        If you follow this idea recursively, you will end up back at your starting position.
+        This traversal is described by the blue lines, that according to the glueing,
+        actually form a single blue line called the <strong>normal curve</strong>.
+      </p>
+
+      <!--
+        is the triangulation actually necessary ?
+        especially since the number of edges from top to bottom
+        seems to be always the same no matter the integer position
+
+        maybe it is just to prove the reduction can be correctly applied
+        in order to later used the proposed algos..
+      -->
+
+      <p>
+        Next, the surface is divided into a certain number of horizontal lines,
+        and triangulated such that each blue line crosses only 1 triangle edge
+        between two consecutive horizontal lines.
+      </p>
+
       <figure>
-        <img style="width: 350px; height: auto;" src='../images/figures/3-Figure2-1.png' alt='missing' />
+        <img style="width: 400px; height: auto;"
+          src='../images/figures/3-Figure2-1.png' alt='missing' />
         <figcaption>
-          Interval exchange as triangulated manifold
-          (figure from "<a href="https://arxiv.org/pdf/2112.11607.pdf">The Complexity of Iterated Reversible Computation</a>")
+          Interval exchange as triangulated manifold.<br>
+          Note that it does not actually represent mirror subintervals,<br>
+          as it maps a part of the <b>d</b> subinterval back to <b>d</b>,<br>
+           but the overall idea remains the same.<br>
+          (Figure from "<a href="https://arxiv.org/pdf/2112.11607.pdf">The Complexity of Iterated Reversible Computation</a>")
         </figcaption>
       </figure>
 
-      <h2>Interval exchange as triangulated surface</h2>
-        ...
+
       <h2>Normal curve, normal coordinates, arc coordinates, edge coordinates</h2>
-        ...
-
-
-    <h1>Problem reduction</h1>
-
-      <h2>Mirror environment as interval exchange</h2>
-        ...
-      <h2>Partial exchange</h2>
-        ...
+        <!-- Insert algos from yet another paper ^^ -->
 
     <h1>Conclusion</h1>
-
+      ...
 
 
 

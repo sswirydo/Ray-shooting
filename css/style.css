@@ -9,8 +9,11 @@ p {
   background-color: #e7f3fe;
   border-left: 6px solid #2196F3;
 }
-
 .todo {
   background-color: #ffcf54;
   border-left: 6px solid #ea991f;
+}
+.example {
+  background-color: #b1dd82;
+  border-left: 6px solid #178a33;
 }
