@@ -451,6 +451,7 @@ function createTestEnv1() {
     RAY
       (?) I suppose it is (7, 3) going to (6, 1)
   */
+  GRIDS = 7+2;
   mirrors.push(new Mirror(0, 0, 4, 4)); // AB
   mirrors.push(new Mirror(4, 4, 5, 4)); // BC
   mirrors.push(new Mirror(5, 4, 6, 3)); // CD

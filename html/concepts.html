@@ -13,7 +13,8 @@
   <div class="sidebar">
     <a class="" href="../index.html">Home</a>
     <a class="active" href="concepts.html">Concepts</a>
-    <a class="" href="tool.html">Tool (WIP)</a>
+    <a class="" href="code.html">Code</a>
+    <a class="" href="tool.html">Tool</a>
     <a class="" href="references.html">References</a>
   </div>
 
@@ -90,7 +91,7 @@
           </li>
           <li>Given a ray going in a specified direction,
             it can hit any mirror in only a finite number of positions.</li>
-          <li>(fixme: cite infinitely many in/out grid points?) </li>
+          <!-- <li>(fixme: cite infinitely many in/out grid points?) </li> -->
         </ol>
 
         Which in summary will give us a system like represented by the image below,
@@ -103,20 +104,27 @@
           <img style="width: 350px; height: auto;" src='../images/figures/article-figure-in-tool.png' alt='missing' />
           <figcaption></figcaption>
         </figure>
+        <div class='todo'><strong>TODO:</strong> Explain all observations and lemmas (following the numbers in article)</div>
       </p>
 
     <h1>Bijection, interval exchange, iterated interval exchange</h1>
-      As the overall context is now established, we are ready to explore some more interesting concepts.
+      With the general context now established, the observations and lemmas arising from the initial hypotheses,
+      we are ready to explore the core concepts.
 
       <p>
         As a reminder, the idea of a <strong>bijection</strong> is, given input and output sets,
-        to join each input elements to an output element and vice versa for instance using a line,
-        making sure each input and each output element has one and only one incoming or outcoming line.
+        to join each input elements to one and only one output element and vice versa.
+        For instance using a line, making sure each input and each output element has one and only one incoming/outcoming line.
       </p>
 
       <p>
-        The idea behind an <strong>integer interval exchange transformation</strong> is to divide an interval of integers into subintervals.
-        Those subintervals and then permuted (rearranged).
+        The main idea behind the algorithm is to compute for every ray's directions, every possible bounces with every mirrors and the next collision.
+        In other words, it creates a mapping predicting every possible bounces in the environnement.
+        Then we apply this mapping for a given ray direction bouncing on a mirror to get the next collision with a reflective or non-reflective surfaces.
+        We called this mapping an <strong>integer interval exchange transformation</strong>.
+
+        use an <strong>integer interval exchange transformation</strong>. It consists in dividing an interval
+        of integers into subintervals, then those subintervals are permuted (exchange).
         ...
       </p>
 
@@ -155,15 +163,6 @@
         actually form a single blue line called the <strong>normal curve</strong>.
       </p>
 
-      <!--
-        is the triangulation actually necessary ?
-        especially since the number of edges from top to bottom
-        seems to be always the same no matter the integer position
-
-        maybe it is just to prove the reduction can be correctly applied
-        in order to later used the proposed algos..
-      -->
-
       <p>
         Next, the surface is divided into a certain number of horizontal lines,
         and triangulated such that each blue line crosses only 1 triangle edge
@@ -183,8 +182,40 @@
       </figure>
 
 
-      <h2>Normal curve, normal coordinates, arc coordinates, edge coordinates</h2>
+      <h2>Traversing the normal curve</h2>
         <!-- Insert algos from yet another paper ^^ -->
+
+        <!-- (s = ceil(log_2(k))) → 1/2 height of the surface)<br> -->
+
+        <!-- With the surface constructed, the idea is as follows:
+        we start with the number we want to iterate, let's say
+        4, belonging to the <b>a</b> subinterval.
+        From there we will descend vertically onto the middle horizontal edge.
+        If we want to iterate it 4 times -->
+
+        Consider mainly the middle horizontal edge of the surface and also the normal curve.
+        We start at a certain position of the horizontal line,
+        that we will call the edge coordinates, that correspond to the initial number we want to iterate.
+        From there, basically, the idea is to convert those edge coordinates into arc coordinates.
+        Arc coordinates represent the i_th edge that the normal curve has crossed/hit since an arbitrary initial starting position.
+        Once those are obtained, we add '<b>2ns</b>' to those coordinates.
+        '<b>n</b>' is the number of iterations we want to execute.
+        '<b>s</b>' is the number of edges crossed from the horizontal central edge to the horizontal top edge (4 in our example),
+        which we multiply by 2 in order to obtain the number of edges crossed from top to bottom.
+        We modulo the whole operation as the arc coordinates are cyclic by normal curve definition.
+        Then, we simply convert back to the edge coordinates in order to obtain the final result of the iteration.
+
+        This could actually be done by simple my simple additional with modulo in the case of a single cycle.
+        Actually we could even skip the whole triangulation part.
+
+        However, this only works when the interval exchange only includes a single normal arc.
+        In practice, there are several normals arc and thus multiple cycles.
+
+        In order to take those in count, we have to apply additional topological subroutines.
+        ...
+
+        [+ illustrate with partial interval and infinite trap]
+
 
     <h1>Conclusion</h1>
       ...

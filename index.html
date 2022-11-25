@@ -13,7 +13,8 @@
   <div class="sidebar">
     <a class="active" href="index.html">Home</a>
     <a class="" href="html/concepts.html">Concepts</a>
-    <a class="" href="html/tool.html">Tool (WIP)</a>
+    <a class="" href="html/code.html">Code</a>
+    <a class="" href="html/tool.html">Tool</a>
     <a class="" href="html/references.html">References</a>
   </div>
 
@@ -32,18 +33,34 @@
     SWIRYDOWICZ Szymon
 
     <h2>Progress</h2>
-    <h3>Done</h3>
-    <ul>
-      <li>Implementation of base tool structure</li>
-      <li>Iterated Integer Exchange</li>
-    </ul>
-    <h3>Todo</h3>
-    <ul>
-      <li>Explanation of concepts</li>
-      <li>Partial Integer Interval Exchange</li>
-      <li>Fast Iterated Interval Exchange - Implement topology concepts to (maybe) speed up the computations (cf. Section 6.4 and Theorem 8 of "<i>The Complexity of Iterated Reversible Computation</i>" paper</li>
-    </ul>
-  </div>
+
+      Currently, we have implemented a basic tool
+      that allows to compute the reflections of a light ray
+      in an octagonal mirror integer-environnement.
+
+      We have started the explanations of the concepts of the article,
+      and we essentially still need to add some important points,
+      illustrate different parts, and mostly add some pertinent
+      images and figures to better illustrate the ideas.
+
+      However note that our tool does not completely implement
+      the whole scope of the article, but rather allows
+      to illustrate some important parts, such as the finite
+      number of reflections, directions and its general idea.
+
+      In order to obtain a complete implementation we would have
+      to complement it with a reduction into a
+      triangulated manifold and apply a series of subroutines
+      from computational topology, that would potentially
+      make the whole algorithm faster (actually we
+      are not certain of that point), but the overall
+      outcome of ray-shooting would not change.
+
+      As this topological implementation is quite time consuming
+      (and we are not even sure we would be able to
+      code it in such short time), and does not bring
+      much, at least visually, to the whole process,
+      we will just focus on explaining its concepts.
 
 </body>
 </html>
