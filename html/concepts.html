@@ -72,7 +72,6 @@
         every possible bounces with every mirrors and the location of the next collision.
         In other words, it creates a mapping predicting every possible bounces in the environnement.
         Then we apply this mapping for a given ray direction bouncing on a mirror to get the next collision.
-        <!-- On order to have a "next" collision point for the exiting ray as well, we surrounds the environnement with a big absorbing box. -->
         We called this mapping an <strong>integer interval exchange transformation</strong>, noted f(x).
         Therefore, to get the ray's direction and position after n bounces we simply have to apply n times this exchange transformation.
         This succession of n mappings is called <strong>iterated integer interval exchange transformation</strong>, noted f<sup>(n)</sup>(x).
@@ -135,29 +134,77 @@
           More generally, an integer interval exchange transformation consists in dividing an interval
           of integers into subintervals, then those subintervals are permuted (exchange).
           <!-- illustration from the article -->
+          
           Therefore it is a bijective mapping.
           This bijective property is really important. Indeed, it allows to guarantee a solution when applying n times the transformation.
         </p>
+        <figure>
+          <img style="width: 300px; height: auto;"
+            src='../images/figures/interval_exchange.png' alt='missing' />
+          <figcaption>
+            Interval exchange transformation<br>
+            Note that this illustrates the principle of interval exchange transformation but is not a real example of our problem 
+            since a mirror cannot reflect on itself.
+            (Figure from "<a href="https://www.ics.uci.edu/~eppstein/pubs/Epp-CCCG-22c.pdf">Reflections in an Octagonal Mirror Maze</a>")
+          </figcaption>
+        </figure>
         <p>
           As a reminder, the idea of a <strong>bijection</strong> is, given input and output sets,
           to join each input elements to one and only one output element and vice versa.
           For instance using a line, making sure each input and each output element has one and only one incoming/outcoming line.
         </p>
-        <p>The construction of the integer interval exchange transformation by mapping the bounces is not complete (bijective). 
+        <p>To construct the integer interval exchange transformation, we assemble the mirrors on a line and 
+          link every bounce (with a certain position and angle) to the next bounce.
+          Therefore, we need to add this linear aggregation of mirrors 8 times (one by direction).
+        </p>
+        <p>
+          The construction of this integer interval exchange transformation is not complete (bijective). 
           Indeed, this construction does not take into account the non-reflecting mirrors, nor the extremities of the mirrors, nor the outgoing rays.
-          Therefore some adjustments need to be done to get a complete (bijective) integer interval exchange. 
+          Therefore some adjustments need to be done to get a complete (bijective) integer interval exchange transformation.
+          Those adjustments result in the <strong>partial integer interval exchange</strong>.
         </p>
 
-        
+    <h1>Partial integer interval exchange</h1>
+    <p>
+        The previous section highlights 3 problems in the current integer interval exchange:
+        <ol>
+          <li>outgoing rays</li>
+          <li>non-reflective mirror</li>
+          <li>mirrors' endpoints</li>
+        </ol>
+    </p>
+
+    <p>When a mirror reflects a ray out of the environnement, it is not mapped to a "next" bounce (or collision).
+      Therefore, to handle the <strong>outgoing rays</strong>, we simply surrounds the environnement with a big absorbing box.
+      Then we can considered that the outgoing ray is mapped to a non-reflective surface on the border of the environnement.
+      The problem is still not resolved since the non-reflective surfaces are not yet taken into account.
+    </p>
+
+    <p>The <strong>non-reflective</strong> surfaces break the bijectivity of the integer interval exchange transformation.
+    To solve this problem we simply <strong>virtually</strong> mapped a non-reflective surface as it was reflective.
+    </p>
+
+    <p>The <strong>mirrors' endpoints</strong> break the bijectivity as the non-reflective surfaces. 
+      To solve this problem we <strong>virtually</strong> mapped a mirror's endpoint reflection as it flips back the ray (i.e. opposite direction).
+    </p>
+
+    <p>At this point, we obtain a bijective mapping. 
+      However, this mapping is incorrect since we reflect collisions, even on non-reflective surfaces.
+      The <strong>partial integer interval exchange</strong> solves this problem by adding new intervals 
+      that will act like an "infinite trap" for the ray.
+      <br>
+      By the <strong>Observation 5</strong>, we compute n, the total number of possibles bounces which gives a majoration for cycles' size of the bijective mapping.
+      It is useless to apply more than n times the interval exchange transformation because the ray goes out of the environnement before or is caught in an infinite loop.
+      Therefore, a n-depth trap is considered to be "infinte" since we will not compute more than n steps.
+      <br>
+      Basically, the partial integer interval exchange proposes to add, for non-reflective element (the 3 kind of elements cited above), 
+      n new "virtual" element between this non-reflective element and its "virtual" reflection.
+      Consequently, we obtain a complete bijective mapping for all bounces and we are sure that non-reflective element or not map to a reflective element 
+      in less than n steps.
+      <!-- GRAPHICAL ILLUSTRATION + ILLUSTRATION intervals numbers-->
+    </p>
 
     <h1>Fast iterated interval exchange using topology</h1>
-
-      <!--
-        Should we say a few words about binary inputs and gates
-        or is it overkill ?
-        ..especially since we do not explicitly make usage of those concepts
-        nor study the actual computational complexity.
-       -->
 
       <p>
         In order to make the iterated exchange process faster,
@@ -179,13 +226,13 @@
         If you follow this idea recursively (descend from 4 onto <b>d</b> and obtaining 9, etc.) in our example you will end up back at your starting position as the exchange is a bijection and cyclic.
 
         All those blue lines, according to our previous glueing,
-        actually form a single blue line called the <strong>normal curve</strong>.
+        actually form a single blue line called the <span class="normal_curve">normal curve</span>.
       </p>
       
       <p class="note">
         Note that an exchange can have multiple cycles, 
-        in that case we will say that a normal curve is composed
-        of multiple <strong>normal arcs</strong>.
+        in that case we will say that a <span class="normal_curve">normal curve</span> is composed
+        of multiple <span class="normal_arc">normal arcs</span>.
         But for now, we will only focus on a single cycle.
       </p>
 
@@ -217,29 +264,35 @@
         <p>
           Consider mainly the middle horizontal edge of the surface and also the blue <span class="normal_curve">normal curve</span>.
           We start at a certain position of the horizontal line,
-          that we will call the edge coordinates, that correspond to the initial number we want to iterate: x in f<sup>(n)</sup>(x).
-          From there, basically, the idea is to convert those edge coordinates into arc coordinates.
+          that we will call the <span class="edge_coord">edge coordinates</span>,
+          that correspond to the initial number we want to iterate: x in f<sup>(n)</sup>(x).
+          From there, basically, the idea is to convert those <span class="edge_coord">edge coordinates</span> into <span class="arc_coord">arc coordinates</span>.
         </p>
         <p class="note">
-          <strong>Arc coordinates</strong> represent the i<sup>th</sup> edge that a normal arc has crossed/hit since an arbitrary initial starting position.
+          <span class="arc_coord">Arc coordinates</span> represent the i<sup>th</sup> edge
+          that a <span class="normal_arc">normal arc</span> has crossed/hit since an arbitrary initial starting position.
         </p>
         <p>
           Once those are obtained, we add '<b>2ns</b>' to those coordinates.
           '<b>n</b>' is the number of iterations we want to execute (recall f<sup>(n)</sup>(x)).
           '<b>s</b>' is the number of edges crossed from the horizontal central edge to the horizontal top edge (4 in our example),
           which we multiply by 2 in order to obtain the number of edges crossed from top to bottom.
-          We modulo the whole operation as the <b>arc coordinates</b> are cyclic by definition.
-          Then, we simply convert back the <b>arc coordinates</b> to the <b>edge coordinates</b> in order to obtain the final result of the iteration.
+          We modulo the whole operation as the <span class="arc_coord">arc coordinates</span> are cyclic by definition.
+          Then, we simply convert back the <span class="arc_coord">arc coordinates</span>
+          to the <span class="edge_coord">edge coordinates</span>
+          in order to obtain the final result of the iteration.
 
-          For example, if we initialized the arc coordinates to be the edge labelled by <b>a</b>, the edge coordinates x = 0 converted into arc coordinates would be 4. By computing 4 + 2s (where s = 4), we obtain arc coordinates 12,
-          which converted back to the edge coordinates give us x = 4 as seen before.
+          For example, if we initialized the <span class="arc_coord">arc coordinates</span> to be the edge labelled by <b>a</b>,
+          the <span class="edge_coord">edge coordinates</span> x = 0 converted into <span class="arc_coord">arc coordinates</span> would be 4.
+          By computing 4 + 2s (where s = 4), we obtain <span class="arc_coord">arc coordinates</span> 12,
+          which converted back to the <span class="edge_coord">edge coordinates</span> give us x = 4 as seen before.
         </p>
         <p>
           However in our mirror problem, there could have several cycles
-          and thus multiple normal arcs.
+          and thus multiple <span class="normal_arc">normal arcs</span>.
 
           In order to take those into account, retain simply that we have to apply additional topological subroutines,
-          in order to first determine to which normal arc our x value belongs and convert the value to the arc's scope.
+          in order to first determine to which <span>normal arc</span> our x value belongs and convert the value to the arc's scope.
 
           The conversion between coordinates can be obtained through algorithms presented in the section 6 of the "<a href="https://jeffe.cs.illinois.edu/pubs/pdf/tracing.pdf">Tracing Compressed Curves in Triangulated Surfaces</a>" article that we will omit here.
         </p>

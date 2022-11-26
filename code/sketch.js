@@ -72,15 +72,18 @@ class Ray {
   }
 
   _computeDirections() {
-    // FIXME only 4 direction
-    let only_four_dir =
-      this.dir.x === 0 || this.dir.y === 0 || this.dir.x === this.dir.y;
     let directions = [];
-    directions.push(new Point(this.dir.x, this.dir.y)); // +x +y (12h)
-    directions.push(new Point(this.dir.y, -this.dir.x)); // +y -x (3h) (RIGHT)
-    directions.push(new Point(-this.dir.x, -this.dir.y)); // -x -y (6h) (DOWN)
-    directions.push(new Point(-this.dir.y, this.dir.x)); // -y +x (9h) (LEFT)
-    if (!only_four_dir) {
+    if (this.dir.x === 0 || this.dir.y === 0 || this.dir.x === this.dir.y || this.dir.x === -this.dir.y) {
+      directions.push(new Point(this.dir.x, this.dir.y)); // +x +y (12h)
+      directions.push(new Point(this.dir.y, -this.dir.x)); // +y -x (3h) (RIGHT)
+      directions.push(new Point(-this.dir.x, -this.dir.y)); // -x -y (6h) (DOWN)
+      directions.push(new Point(-this.dir.y, this.dir.x)); // -y +x (9h) (LEFT)
+    }
+    else {
+      directions.push(new Point(this.dir.x, this.dir.y)); // +x +y (12h)
+      directions.push(new Point(this.dir.y, -this.dir.x)); // +y -x (3h) (RIGHT)
+      directions.push(new Point(-this.dir.x, -this.dir.y)); // -x -y (6h) (DOWN)
+      directions.push(new Point(-this.dir.y, this.dir.x)); // -y +x (9h) (LEFT)
       directions.push(new Point(this.dir.y, this.dir.x)); // +y +x (UP-RIGHT)
       directions.push(new Point(this.dir.x, -this.dir.y)); // +x -y (DOWN-RIGHT)
       directions.push(new Point(-this.dir.y, -this.dir.x)); // -y -x (DOWN-LEFT)
@@ -107,7 +110,7 @@ class Mirror {
     // actually EACH SIDE of the mirror
     // COULD be marked as reflective or non reflective
     // but we simplified it to both side
-    // as it would unecesserily complicate
+    // as it would unnecessarily complicate
     // the implementation for not much
     this.is_reflective = reflective;
   }
@@ -211,6 +214,9 @@ class IntegerExchange {
   // rather than looping n times
   f(ray, n) {
     // this._debugTestFindBounce(ray, 2, 9);
+
+    this._debugTestFindBounce(5, 5);
+
     let previous_idx = null;
     let bounce_idx = this._getFirstBounce(ray);
     if (bounce_idx) {
@@ -277,8 +283,46 @@ class IntegerExchange {
         this._addBounces(mirror, nb_splits, dir, bounce_dir);
       }
     }
+
+    this._findSimilarBounces();
+
     this._computeMapping();
   }
+
+  _findSimilarBounces() {
+    console.log(this.intervals);
+    let bounces = this.intervals;
+    let duplicates = []
+    for (let i = 0; i < bounces.length; i++) {
+      for (let j = 0; j < bounces.length; j++) {
+        if (i !== j) {
+          let posA = bounces[i].point;
+          let posB = bounces[j].point;
+          let in_dirA = bounces[i].in_dir;
+          let in_dirB = bounces[j].in_dir;
+          let out_dirA = bounces[i].out_dir;
+          let out_dirB = bounces[j].out_dir;
+          if (posA.isEqual(posB) && in_dirA.isEqual(in_dirB)){
+            let test1 = true;
+            let test2 = true;
+            if (! duplicates.includes(i)) {
+             duplicates.push(i);
+             test1 = false;
+            }
+            if (! duplicates.includes(j)) {
+              duplicates.push(j);
+              test2 = false;
+            }
+            if (!test1 && !test2) {
+             console.error("_findSimilarBounces: duplicate: ", i, j, bounces[i], bounces[j]);
+            }
+            
+          } 
+        }
+      }
+    }    
+  }
+  
 
   _getAllBounces(mirror, dir) {
     if (mirror.orientation === HORIZONTAL) {
@@ -315,20 +359,43 @@ class IntegerExchange {
   }
 
   _addBounces(mirror, nb_splits, in_dir, out_dir) {
-    this.intervals.push(new Bounce(in_dir, mirror.start, null)); // miroir endpoint does not reflects
+
+    let bounce = null;
+    bounce =  new Bounce(in_dir, mirror.start, null); // mirror endpoint does not reflects
+    if (! this._is_bounce_duplicate(bounce.in_dir, bounce.point)) {
+      this.intervals.push(bounce);
+    }
+    
     for (let i = 1; i < nb_splits; i++) {
       let lambda = i / nb_splits;
       let point = new Point(
         lambda * mirror.end.x + (1 - lambda) * mirror.start.x,
         lambda * mirror.end.y + (1 - lambda) * mirror.start.y
       );
-      if (mirror.is_reflective) {
-        this.intervals.push(new Bounce(in_dir, point, out_dir));
+      if (mirror.is_reflective) { //if bounce already existing
+        bounce = new Bounce(in_dir, point, out_dir);
       } else {
-        this.intervals.push(new Bounce(in_dir, point, null));
+        bounce = new Bounce(in_dir, point, null);
+      }
+      if (! this._is_bounce_duplicate(bounce.in_dir, bounce.point)) {
+        this.intervals.push(bounce);
       }
     }
-    this.intervals.push(new Bounce(in_dir, mirror.end, null)); // miroir endpoint does not reflects
+    bounce = new Bounce(in_dir, mirror.end, null); // mirror endpoint does not reflects
+    if (! this._is_bounce_duplicate(bounce.in_dir, bounce.point)) {
+      this.intervals.push(bounce);
+    }
+  }
+
+  _is_bounce_duplicate(in_dir, point) {
+    let ans = false;
+    for (let bounce of this.intervals) {
+      if (bounce.point.isEqual(point) && bounce.in_dir.isEqual(in_dir)){
+        ans = true;
+        bounce.out_dir = null;
+      }
+    }
+    return ans;
   }
 
   _computeMapping() {
@@ -369,14 +436,6 @@ class IntegerExchange {
 
 * * * * * * * * * * * * * * * * * */
 
-function tranformCoordsToGrid(x, y) {
-  let new_x = xToGrid(x);
-  let new_y = yToGrid(y);
-
-  console.log("Previous coords:", x, y);
-  console.log("New coords:", new_x, new_y);
-}
-
 function xToGrid(x) {
   return -1 + (GRIDS * x) / RESOLUTION;
 }
@@ -406,7 +465,7 @@ function runTests() {}
 
 function createTestEnv1() {
   /*
-    Example from Figure 1. (erronous?)
+    Example from Figure 1.
     POINTS
       A = (0, 0)  B = (4, 4)
       C = (5, 4)  D = (6, 3)
@@ -414,7 +473,7 @@ function createTestEnv1() {
     MIRRORS
       AB, BC, CD, DE, FA
     RAY
-      (?) I suppose it is (7, 3) going to (6, 1)
+      (7, 3) going to (6, 1)
   */
   mirrors.push(new Mirror(0, 0, 4, 4)); // AB
   mirrors.push(new Mirror(4, 4, 5, 4)); // BC
@@ -444,24 +503,6 @@ function createTestEnv3() {
   mirrors.push(new Mirror(5, 4, 6, 3, NON_REFLECTIVE)); // CD
   mirrors.push(new Mirror(6, 3, 6, 2)); // DE
   mirrors.push(new Mirror(6, 0, 0, 0)); // FA
-  ray = new Ray(7, 3, 6, 1);
-}
-
-function createTestEnv4() {
-  // basically test 1 but only using 1 unit len mirrors
-  mirrors.push(new Mirror(0, 0, 1, 1)); // AB
-  mirrors.push(new Mirror(1, 1, 2, 2)); // AB
-  mirrors.push(new Mirror(2, 2, 3, 3)); // AB
-  mirrors.push(new Mirror(3, 3, 4, 4)); // AB
-  mirrors.push(new Mirror(4, 4, 5, 4)); // BC
-  mirrors.push(new Mirror(5, 4, 6, 3)); // CD
-  mirrors.push(new Mirror(6, 3, 6, 2)); // DE
-  mirrors.push(new Mirror(6, 0, 5, 0)); // FA
-  mirrors.push(new Mirror(5, 0, 4, 0)); // FA
-  mirrors.push(new Mirror(4, 0, 3, 0)); // FA
-  mirrors.push(new Mirror(3, 0, 2, 0)); // FA
-  mirrors.push(new Mirror(2, 0, 1, 0)); // FA
-  mirrors.push(new Mirror(1, 0, 0, 0)); // FA
   ray = new Ray(7, 3, 6, 1);
 }
 
@@ -519,7 +560,6 @@ function setup() {
   test_select.option("Test 1: article reference", 1);
   test_select.option("Test 2: loop", 2);
   test_select.option("Test 3: article + non-reflective", 3);
-  test_select.option("Test 4: article + 1 unit len", 4);
 
   test_text = createElement("h3", "tests");
   test_text.position(test_select.x + test_select.width + 5, test_select.y - 20);
@@ -567,9 +607,6 @@ function selectHandler() {
     case "3":
       createTestEnv3();
       break;
-    case "4":
-      createTestEnv4();
-      break;
     default:
   }
   redraw();
@@ -583,7 +620,6 @@ function resetEnv() {
   integer_exchange = null;
 
   clickCount = 0;
-  //n_steps_input.value(100);
   x1_input.value("");
   y1_input.value("");
   x2_input.value("");
