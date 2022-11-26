@@ -18,7 +18,7 @@ const N_STEPS_DEFAULT = 100;
 
 var GRIDS = GRIDS_DEFAULT;
 var mirrors = [];
-var interval_exchange = null;
+var integer_exchange = null;
 var ray = null;
 var clickCount = 0;
 
@@ -152,42 +152,8 @@ class Bounce {
   }
 }
 
-class Interval {
-  construcor() {
-    this.start_idx = null;
-    this.end_idx = null;
-  }
-}
 
-class TriangulatedSurface {
-  constructor(integer_interval) {
-    this.integer_interval = integer_interval;
-    this.surface_width = null;
-    this.surface_height = null;
-
-    this.triangles = null;
-    this.surface = null;
-  }
-
-  _createSurface(input_layer, output_layer) {
-    // problème, techniquement,
-    // nous avons plutôt des points et pas des intervalles
-    // à quel point est-ce important ?
-    // ou alors intervalle (de bounce) <=> par miroir er par in_slope
-    // mais est-ce vraiment nécessaire ?
-  }
-  _triangulate(surface) {}
-  _glue() {
-    // pour pouvoir loop vers l'infini
-    // faut juste s'assurer d'avoir une belle bijection
-    // (notamment avec les rayons qui s'arrêtent)
-  }
-  _computeNormalCoordinates() {}
-  _computeNormalArc() {}
-  _convert() {}
-}
-
-class IntegerInterval {
+class IntegerExchange {
   constructor(ray, mirrors) {
     this.intervals = []; // List of 'Bounce' of the integer interval ('Bounce' contains in_dir, point, out_dir)
     this.exchange = []; // Mapping for the intervals
@@ -261,7 +227,6 @@ class IntegerInterval {
       console.log(">> Ray does not intersect any mirror.");
       ray.print();
     }
-    return i;
   }
 
   _getFirstBounce(ray) {
@@ -428,7 +393,7 @@ function yToP5(y) {
 
 function computeReflections() {
   ray.clear();
-  interval_exchange = new IntegerInterval(ray, mirrors);
+  integer_exchange = new IntegerExchange(ray, mirrors);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -451,7 +416,6 @@ function createTestEnv1() {
     RAY
       (?) I suppose it is (7, 3) going to (6, 1)
   */
-  GRIDS = 7+2;
   mirrors.push(new Mirror(0, 0, 4, 4)); // AB
   mirrors.push(new Mirror(4, 4, 5, 4)); // BC
   mirrors.push(new Mirror(5, 4, 6, 3)); // CD
@@ -559,6 +523,14 @@ function setup() {
 
   test_text = createElement("h3", "tests");
   test_text.position(test_select.x + test_select.width + 5, test_select.y - 20);
+
+  grid_slider = createSlider(8, 50, 12, 2); // min,max,default,step
+  grid_slider.position(425, 20 + 25 * 13);
+  grid_slider.style("width", "80px");
+  grid_text = createElement("h3", "grid");
+  grid_text.html("grids: " + (GRIDS_DEFAULT - 2));
+  grid_text.position(grid_slider.x + grid_slider.width + 5, grid_slider.y - 20);
+  makeButton("Change grid", 425, 20 + 25 * 14, changeGrid);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -608,7 +580,7 @@ function resetEnv() {
   GRIDS = GRIDS_DEFAULT;
   ray = null;
   mirrors = [];
-  interval_exchange = null;
+  integer_exchange = null;
 
   clickCount = 0;
   //n_steps_input.value(100);
@@ -680,12 +652,17 @@ function fireTheRay() {
     computeReflections();
 
     console.log("[Earth]");
-    interval_exchange.f(ray, n);
+    integer_exchange.f(ray, n);
 
     console.log("[Water]");
   } else {
     colorElement(fire_button, "red");
   }
+}
+
+function changeGrid() {
+  let val = parseInt(grid_slider.value(), 10);
+  GRIDS = val;
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -697,6 +674,7 @@ function fireTheRay() {
 function draw() {
   createCanvas(CANVAS_SIZE, CANVAS_SIZE);
   background(230, 255, 255);
+  updateSlider();
   drawIntegerGrid();
   drawMirrors();
   drawRay();
@@ -705,6 +683,11 @@ function draw() {
 
 function colorElement(element, color) {
   element.style(`color: ${color};`);
+}
+
+function updateSlider() {
+  let val = parseInt(grid_slider.value(), 10);
+  grid_text.html("grids: " + (val - 2));
 }
 
 function drawSelect() {
@@ -770,9 +753,9 @@ function drawMirrors() {
 }
 
 function drawBounceCoords() {
-  if (interval_exchange) {
+  if (integer_exchange) {
     stroke(1, 1, 255);
-    for (let bounce of interval_exchange.intervals) {
+    for (let bounce of integer_exchange.intervals) {
       ellipse(xToP5(bounce.point.x), yToP5(bounce.point.y), 4, 4);
     }
     stroke(0);
