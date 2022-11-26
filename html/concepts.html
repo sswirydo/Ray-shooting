@@ -24,21 +24,20 @@
       0th: intro
       1st: the subject and main ideas.
       2nd: bijection and interval exchange
-      3rd: iterated interval exchange
-      4th: the fast-iterated interval exchange (topology)
-      5th: link the simple mirror problem to this reduction
-      6th: extend with the complete mirror problem and tell about the partial integer idea
-      7th: conclude
+      3rd: iterated interval exchange (construction)
+      4th: Partial iterated (why ? -> 'infinite' trap)
+      5th: the fast-iterated interval exchange (topology) -> +see "Code section"
+      6th: conclude
      -->
 
-    <h1>Avant-propos</h1>
+    <h1>Remarks</h1>
       <ul>
         <li>This project and especially the current page are currently work in progress thus expect changes to be made.</li>
         <li>The below work closely follows the work of David Eppstein. See <a href="references.html">References</a> page.</li>
+        <li>Details regarding our implementation of the below ideas can be found in the <a href="code.html">Code</a> section.</li>
       </ul>
 
     <h1>Introduction</h1>
-      <div class='todo'><strong>TODO:</strong> Rewrite, especially the computer graphics part.</div>
       <p>
         In computer graphics,
         we are often given a 3D-space containing a set of triangles
@@ -67,39 +66,57 @@
         Will it disappear somewhere ? Will it manage to escape a mirror labyrinth or will it loop infinitely.
       </p>
 
+    <h1>General idea</h1>
       <p>
-        The problem will present some simplifications:
+        The main idea behind the algorithm is to compute for every ray's directions, 
+        every possible bounces with every mirrors and the location of the next collision.
+        In other words, it creates a mapping predicting every possible bounces in the environnement.
+        Then we apply this mapping for a given ray direction bouncing on a mirror to get the next collision.
+        <!-- On order to have a "next" collision point for the exiting ray as well, we surrounds the environnement with a big absorbing box. -->
+        We called this mapping an <strong>integer interval exchange transformation</strong>, noted f(x).
+        Therefore, to get the ray's direction and position after n bounces we simply have to apply n times this exchange transformation.
+        This succession of n mappings is called <strong>iterated integer interval exchange transformation</strong>, noted f<sup>(n)</sup>(x).
+        An optimize version, called <strong>fast iterated exchange transformation</strong>, 
+        allows to compute the result of the n<sup>th</sup> mapping without computing all the previous mapping. 
+        With this last algorithm, we can predict the outcomes of the ray (e.g. location and direction of the exiting ray) 
+        without the intermediate bounces.
+      </p>
+
+    <h2>Hypotheses</h2>
+      <p>
+        In a real case application, there is an infinite number of possible reflections. 
+        Therefore to apply this kind algorithm we need to defined some assumptions to simplify the problem :
         <ol>
-          <li>Mirrors have integer endpoints.</li>
-          <li>Mirrors can only be horizontal, vertical, or diagonal (45°) regarding the grid.</li>
+          <li>Mirrors have integer endpoints. It means that the starting and ending point of mirrors have integer coordinates (i.e. x and y are integers).</li>
+          <li>Mirrors can only be horizontal, vertical, or diagonal (at 45°) regarding the grid.</li>
           <li>The ray is represented as a vector,
               whose starting position and direction are specified by integer values.
-              this also means that when it is translated, it has to pass through an integer point.
-          </li>
-          <li>
-            Mirrors' endpoints, i.e. the start and end positions of each mirror segment, do not reflect the ray.
-            When a ray hits such points it is absorbed and thus stops its journey.
-          </li>
-
+              Like for mirrors, this means that the starting and ending point of the vector have integer coordinates.</li>
+          <li>Mirrors' endpoints (i.e. the start and end positions) of each mirror segment, do not reflect the ray.
+              When a ray hits such points it is absorbed and thus stops its journey.</li>
         </ol>
-        With this establish, there we obtain some simple but important properties:
-        <div class='todo'><strong>TODO:</strong> Add examples to illustrate.</div>
-
+      </p>
+      <p>
+        With this establish, we obtain some simple but important properties:
         <ol>
-          <li>Since the mirrors have only 4 possible slopes,
-            all our rays can be reflected in at most 8 possible directions.
-          </li>
+          <li>Since the mirrors have only 4 possible slopes, 
+              all our rays can be reflected in at most 8 possible directions.</li>
           <li>Given a ray going in a specified direction,
             it can hit any mirror in only a finite number of positions.</li>
-          <!-- <li>(fixme: cite infinitely many in/out grid points?) </li> -->
+          <li>The ray's space before and after the reflection are the same. 
+            The initial ray could go through any integer point of our environnement if we translate its initial position.
+            It remains true after any reflection, the new ray could go through any integer point if we translate its position.
         </ol>
-
+        Therefore, it means there is a finite and numerable number of possible bounces in an octagonal mirror environnement making this algorithm computable.
+      </p>
+      <h2>Example</h2>
+      <p>
         Which in summary will give us a system like represented by the image below,
-        where the ray start at (7,3) (red circle),
+        where the ray start at (7,3) (red circle) with an input direction (-1,-2),
         is reflected by mirrors represented by the blue lines,
         and escape through the right-down corner.
-        Note that the blue circles represent all the possible positions
-        that the light ray going in the (-1,-2) direction can hit.
+        Note that the blue circles represent all the possible bounces. It means all the positions
+        that the light ray could reach from its 8 possibles directions.
         <figure>
           <img style="width: 350px; height: auto;" src='../images/figures/article-figure-in-tool.png' alt='missing' />
           <figcaption></figcaption>
@@ -107,31 +124,31 @@
         <div class='todo'><strong>TODO:</strong> Explain all observations and lemmas (following the numbers in article)</div>
       </p>
 
-    <h1>Bijection, interval exchange, iterated interval exchange</h1>
-      With the general context now established, the observations and lemmas arising from the initial hypotheses,
-      we are ready to explore the core concepts.
+      <!-- Lemmas and so on about collisions -->
+    
+      <h1>Integer interval exchange transformation</h1>
+      <!--With the general context now established, the observations and lemmas arising from the initial hypotheses,
+      we are ready to explore the core concepts.-->
+        <p>
+          As explained, in our problem, the integer interval exchange transformation maps a bounce 
+          (i.e. input ray's direction and coordinates of the collision with the mirror) to the "next" bounce.
+          More generally, an integer interval exchange transformation consists in dividing an interval
+          of integers into subintervals, then those subintervals are permuted (exchange).
+          <!-- illustration from the article -->
+          Therefore it is a bijective mapping.
+          This bijective property is really important. Indeed, it allows to guarantee a solution when applying n times the transformation.
+        </p>
+        <p>
+          As a reminder, the idea of a <strong>bijection</strong> is, given input and output sets,
+          to join each input elements to one and only one output element and vice versa.
+          For instance using a line, making sure each input and each output element has one and only one incoming/outcoming line.
+        </p>
+        <p>The construction of the integer interval exchange transformation by mapping the bounces is not complete (bijective). 
+          Indeed, this construction does not take into account the non-reflecting mirrors, nor the extremities of the mirrors, nor the outgoing rays.
+          Therefore some adjustments need to be done to get a complete (bijective) integer interval exchange. 
+        </p>
 
-      <p>
-        As a reminder, the idea of a <strong>bijection</strong> is, given input and output sets,
-        to join each input elements to one and only one output element and vice versa.
-        For instance using a line, making sure each input and each output element has one and only one incoming/outcoming line.
-      </p>
-
-      <p>
-        The main idea behind the algorithm is to compute for every ray's directions, every possible bounces with every mirrors and the next collision.
-        In other words, it creates a mapping predicting every possible bounces in the environnement.
-        Then we apply this mapping for a given ray direction bouncing on a mirror to get the next collision with a reflective or non-reflective surfaces.
-        We called this mapping an <strong>integer interval exchange transformation</strong>.
-
-        use an <strong>integer interval exchange transformation</strong>. It consists in dividing an interval
-        of integers into subintervals, then those subintervals are permuted (exchange).
-        ...
-      </p>
-
-      <p>
-        Returning back to our mirror problem, it could be viewed as such a exchange transformation.
-        ...
-      </p>
+        
 
     <h1>Fast iterated interval exchange using topology</h1>
 
@@ -150,23 +167,36 @@
       <h2>Interval exchange as triangulated surface</h2>
       <p>
         As illustrated by the image below,
-        the idea is to place the initial interval and its decomposition into subintervals at the top,
-        the corresponding permutation of those subintervals at the bottom.
-        Then, we glue each subinterval with its corresponding subinterval after permutation.
-        For instance, the top <b>a</b> subinterval is joined with the bottom <b>a</b> subinterval.
-        As such, if we start at a specific integer at the top line and descend vertically,
-        we will end up at another integer position of the top line.
-        If we start at top position 0 (a subinterval) and descend into bot position 0 (b subinterval),
-        we will come back to the top at position 4 (b subinterval).
-        If you follow this idea recursively, you will end up back at your starting position.
-        This traversal is described by the blue lines, that according to the glueing,
+        the idea is to place the decomposition of the initial interval into subintervals at the top,
+        and the corresponding permutation of those subintervals at the bottom.
+        Then, we glue each subinterval with its corresponding subinterval after permutation (i.e per label).
+        For instance, the top's first subinterval labelled by <b>a</b> will be joined with the last bottom subinterval <b>a</b>.
+        As those intervals are made of integers, we will make those numbers stand out by drawing a vertical blue line
+        from each integer. In the example, as the integer range goes from 0 to 14 (from left to right), we thus have 15 blue lines.
+        Descending this line vertically from a top's certain integer, will give its corresponding permutation value at the bottom.
+        Thus, starting from number 0 at the top (<b>a</b> subinterval), we will descend into the <b>b</b> subinterval, giving the number 4. 
+
+        If you follow this idea recursively (descend from 4 onto <b>d</b> and obtaining 9, etc.) in our example you will end up back at your starting position as the exchange is a bijection and cyclic.
+
+        All those blue lines, according to our previous glueing,
         actually form a single blue line called the <strong>normal curve</strong>.
+      </p>
+      
+      <p class="note">
+        Note that an exchange can have multiple cycles, 
+        in that case we will say that a normal curve is composed
+        of multiple <strong>normal arcs</strong>.
+        But for now, we will only focus on a single cycle.
       </p>
 
       <p>
         Next, the surface is divided into a certain number of horizontal lines,
-        and triangulated such that each blue line crosses only 1 triangle edge
+        and triangulated in such a way that each blue line crosses only one triangle edge
         between two consecutive horizontal lines.
+        To be more precise, the surface must have a central horizontal line (edge) that will have only two vertices, 
+        placed on its borders (or a single vertex if we view the surface as glued by its vertical borders).
+        The goal will be to add enough horizontal lines in between such that the above's property about blue 
+        lines and triangle edges is respected.
       </p>
 
       <figure>
@@ -183,43 +213,36 @@
 
 
       <h2>Traversing the normal curve</h2>
-        <!-- Insert algos from yet another paper ^^ -->
 
-        <!-- (s = ceil(log_2(k))) → 1/2 height of the surface)<br> -->
+        <p>
+          Consider mainly the middle horizontal edge of the surface and also the blue <span class="normal_curve">normal curve</span>.
+          We start at a certain position of the horizontal line,
+          that we will call the edge coordinates, that correspond to the initial number we want to iterate: x in f<sup>(n)</sup>(x).
+          From there, basically, the idea is to convert those edge coordinates into arc coordinates.
+        </p>
+        <p class="note">
+          <strong>Arc coordinates</strong> represent the i<sup>th</sup> edge that a normal arc has crossed/hit since an arbitrary initial starting position.
+        </p>
+        <p>
+          Once those are obtained, we add '<b>2ns</b>' to those coordinates.
+          '<b>n</b>' is the number of iterations we want to execute (recall f<sup>(n)</sup>(x)).
+          '<b>s</b>' is the number of edges crossed from the horizontal central edge to the horizontal top edge (4 in our example),
+          which we multiply by 2 in order to obtain the number of edges crossed from top to bottom.
+          We modulo the whole operation as the <b>arc coordinates</b> are cyclic by definition.
+          Then, we simply convert back the <b>arc coordinates</b> to the <b>edge coordinates</b> in order to obtain the final result of the iteration.
 
-        <!-- With the surface constructed, the idea is as follows:
-        we start with the number we want to iterate, let's say
-        4, belonging to the <b>a</b> subinterval.
-        From there we will descend vertically onto the middle horizontal edge.
-        If we want to iterate it 4 times -->
+          For example, if we initialized the arc coordinates to be the edge labelled by <b>a</b>, the edge coordinates x = 0 converted into arc coordinates would be 4. By computing 4 + 2s (where s = 4), we obtain arc coordinates 12,
+          which converted back to the edge coordinates give us x = 4 as seen before.
+        </p>
+        <p>
+          However in our mirror problem, there could have several cycles
+          and thus multiple normal arcs.
 
-        Consider mainly the middle horizontal edge of the surface and also the normal curve.
-        We start at a certain position of the horizontal line,
-        that we will call the edge coordinates, that correspond to the initial number we want to iterate.
-        From there, basically, the idea is to convert those edge coordinates into arc coordinates.
-        Arc coordinates represent the i_th edge that the normal curve has crossed/hit since an arbitrary initial starting position.
-        Once those are obtained, we add '<b>2ns</b>' to those coordinates.
-        '<b>n</b>' is the number of iterations we want to execute.
-        '<b>s</b>' is the number of edges crossed from the horizontal central edge to the horizontal top edge (4 in our example),
-        which we multiply by 2 in order to obtain the number of edges crossed from top to bottom.
-        We modulo the whole operation as the arc coordinates are cyclic by normal curve definition.
-        Then, we simply convert back to the edge coordinates in order to obtain the final result of the iteration.
+          In order to take those into account, retain simply that we have to apply additional topological subroutines,
+          in order to first determine to which normal arc our x value belongs and convert the value to the arc's scope.
 
-        This could actually be done by simple my simple additional with modulo in the case of a single cycle.
-        Actually we could even skip the whole triangulation part.
-
-        However, this only works when the interval exchange only includes a single normal arc.
-        In practice, there are several normals arc and thus multiple cycles.
-
-        In order to take those in count, we have to apply additional topological subroutines.
-        ...
-
-        [+ illustrate with partial interval and infinite trap]
-
-
-    <h1>Conclusion</h1>
-      ...
-
+          The conversion between coordinates can be obtained through algorithms presented in the section 6 of the "<a href="https://jeffe.cs.illinois.edu/pubs/pdf/tracing.pdf">Tracing Compressed Curves in Triangulated Surfaces</a>" article that we will omit here.
+        </p>
 
 
   </div>

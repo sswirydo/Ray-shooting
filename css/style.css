@@ -3,17 +3,26 @@ p {
   text-align: justify;
 }
 
+span.edge_coord {
+  color: green;
+}
 
-/* source: https://www.w3schools.com/howto/howto_css_notes.asp */
-.info {
-  background-color: #e7f3fe;
-  border-left: 6px solid #2196F3;
+span.arc_coord {
+  color: blue;
 }
-.todo {
-  background-color: #ffcf54;
-  border-left: 6px solid #ea991f;
+
+span.normal_arc {
+  color: red;
 }
-.example {
-  background-color: #b1dd82;
-  border-left: 6px solid #178a33;
+
+span.normal_curve {
+  color: purple;
+}
+
+/* Source: https://www.w3schools.com/howto/howto_css_notes.asp */
+p.note {
+  background-color: #d7e8f8;
+  border-left: 6px solid #4f85d0;
+  margin-bottom: 15px;
+  padding: 4px 12px;
 }
