@@ -68,7 +68,8 @@
 
     <h1>General idea</h1>
       <p>
-        The main idea behind the algorithm is to compute for every ray's directions, 
+        <!-- ??? -->
+        <!-- The main idea behind the algorithm is to compute for every ray's directions, 
         every possible bounces with every mirrors and the location of the next collision.
         In other words, it creates a mapping predicting every possible bounces in the environnement.
         Then we apply this mapping for a given ray direction bouncing on a mirror to get the next collision.
@@ -78,7 +79,8 @@
         An optimize version, called <strong>fast iterated exchange transformation</strong>, 
         allows to compute the result of the n<sup>th</sup> mapping without computing all the previous mapping. 
         With this last algorithm, we can predict the outcomes of the ray (e.g. location and direction of the exiting ray) 
-        without the intermediate bounces.
+        without the intermediate bounces. -->
+        <!-- ??? -->
       </p>
 
     <h2>Hypotheses</h2>
@@ -86,17 +88,17 @@
         In a real case application, there is an infinite number of possible reflections. 
         Therefore to apply this kind algorithm we need to defined some assumptions to simplify the problem :
         <ol>
-          <li>Mirrors have integer endpoints. It means that the starting and ending point of mirrors have integer coordinates (i.e. x and y are integers).</li>
+          <li>Mirrors' starting and ending points have integer coordinates.</li>
           <li>Mirrors can only be horizontal, vertical, or diagonal (at 45°) regarding the grid.</li>
           <li>The ray is represented as a vector,
               whose starting position and direction are specified by integer values.
-              Like for mirrors, this means that the starting and ending point of the vector have integer coordinates.</li>
-          <li>Mirrors' endpoints (i.e. the start and end positions) of each mirror segment, do not reflect the ray.
+          </li>
+          <li>Mirrors' endpoints (i.e. the start and end positions of each mirror segment) do not reflect the ray.
               When a ray hits such points it is absorbed and thus stops its journey.</li>
         </ol>
       </p>
       <p>
-        With this establish, we obtain some simple but important properties:
+        With this established, we obtain some simple but important properties:
         <ol>
           <li>Since the mirrors have only 4 possible slopes, 
               all our rays can be reflected in at most 8 possible directions.</li>
@@ -108,14 +110,14 @@
         </ol>
         Therefore, it means there is a finite and numerable number of possible bounces in an octagonal mirror environnement making this algorithm computable.
       </p>
-      <h2>Example</h2>
+      <h3>Example</h3>
       <p>
-        Which in summary will give us a system like represented by the image below,
-        where the ray start at (7,3) (red circle) with an input direction (-1,-2),
-        is reflected by mirrors represented by the blue lines,
+        Following those hypotheses, we will obtain a system like represented by the image below.
+        The ray starts at coordinates (7,3) (red circle) with an direction (-1,-2).
+        It is reflected by mirrors, that are represented by the blue lines,
         and escape through the right-down corner.
-        Note that the blue circles represent all the possible bounces. It means all the positions
-        that the light ray could reach from its 8 possibles directions.
+        Note that the blue circles represent all the possible positions
+        that a light ray could reach by bouncing towards its 8 possibles directions.
         <figure>
           <img style="width: 350px; height: auto;" src='../images/figures/article-figure-in-tool.png' alt='missing' />
           <figcaption></figcaption>
@@ -133,8 +135,6 @@
           (i.e. input ray's direction and coordinates of the collision with the mirror) to the "next" bounce.
           More generally, an integer interval exchange transformation consists in dividing an interval
           of integers into subintervals, then those subintervals are permuted (exchange).
-          <!-- illustration from the article -->
-          
           Therefore it is a bijective mapping.
           This bijective property is really important. Indeed, it allows to guarantee a solution when applying n times the transformation.
         </p>
@@ -145,13 +145,12 @@
             Interval exchange transformation<br>
             Note that this illustrates the principle of interval exchange transformation but is not a real example of our problem 
             since a mirror cannot reflect on itself.
-            (Figure from "<a href="https://www.ics.uci.edu/~eppstein/pubs/Epp-CCCG-22c.pdf">Reflections in an Octagonal Mirror Maze</a>")
+            (Figure from "<a href="https://arxiv.org/pdf/2112.11607.pdf">The Complexity of Iterated Reversible Computation</a>")
           </figcaption>
         </figure>
         <p>
           As a reminder, the idea of a <strong>bijection</strong> is, given input and output sets,
-          to join each input elements to one and only one output element and vice versa.
-          For instance using a line, making sure each input and each output element has one and only one incoming/outcoming line.
+          to join each input element to one and only one output element and vice versa.
         </p>
         <p>To construct the integer interval exchange transformation, we assemble the mirrors on a line and 
           link every bounce (with a certain position and angle) to the next bounce.
