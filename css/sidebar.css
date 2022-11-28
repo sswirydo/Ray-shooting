@@ -34,6 +34,7 @@
   /* Page content. The value of the margin-left property should match the value of the sidebar's width property */
   div.content {
     margin-left: 200px;
+    padding-top: 10px;
     padding-left: 15%;
     padding-right: 15%;
   }

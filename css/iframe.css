@@ -8,6 +8,8 @@
 	height: 0;
 }
 .wrapper iframe {
+  display: block;
+  align-items: center;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -19,4 +21,6 @@ div.ray {
   height: 97.5vh;
   background-image: url("../images/francesco-califano-nRAXTImpm4k-unsplash.jpg");
   background-size: 100% 100%;
+
+  padding: 0%;
 }

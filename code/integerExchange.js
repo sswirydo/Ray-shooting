@@ -55,10 +55,6 @@ class IntegerExchange {
   // the function should be called n-times,
   // rather than looping n times
   f(ray, n) {
-    // this._debugTestFindBounce(ray, 2, 9);
-
-    this._debugTestFindBounce(5, 5);
-
     let previous_idx = null;
     let bounce_idx = this._getFirstBounce(ray);
     if (bounce_idx) {
@@ -125,46 +121,8 @@ class IntegerExchange {
         this._addBounces(mirror, nb_splits, dir, bounce_dir);
       }
     }
-
-    this._findSimilarBounces();
-
     this._computeMapping();
   }
-
-  _findSimilarBounces() {
-    console.log(this.intervals);
-    let bounces = this.intervals;
-    let duplicates = []
-    for (let i = 0; i < bounces.length; i++) {
-      for (let j = 0; j < bounces.length; j++) {
-        if (i !== j) {
-          let posA = bounces[i].point;
-          let posB = bounces[j].point;
-          let in_dirA = bounces[i].in_dir;
-          let in_dirB = bounces[j].in_dir;
-          let out_dirA = bounces[i].out_dir;
-          let out_dirB = bounces[j].out_dir;
-          if (posA.isEqual(posB) && in_dirA.isEqual(in_dirB)){
-            let test1 = true;
-            let test2 = true;
-            if (! duplicates.includes(i)) {
-             duplicates.push(i);
-             test1 = false;
-            }
-            if (! duplicates.includes(j)) {
-              duplicates.push(j);
-              test2 = false;
-            }
-            if (!test1 && !test2) {
-             console.error("_findSimilarBounces: duplicate: ", i, j, bounces[i], bounces[j]);
-            }
-            
-          } 
-        }
-      }
-    }    
-  }
-  
 
   _getAllBounces(mirror, dir) {
     if (mirror.orientation === HORIZONTAL) {

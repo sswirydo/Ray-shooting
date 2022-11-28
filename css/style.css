@@ -19,6 +19,21 @@ span.normal_curve {
   color:blue;
 }
 
+figcaption {
+  text-align: justify;
+  padding-top: 15px;
+  padding-left: 15%;
+  padding-right: 15%;
+  padding-bottom: 10px;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
 /* Source: https://www.w3schools.com/howto/howto_css_notes.asp */
 p.note {
   background-color: #d7e8f8;
@@ -26,3 +41,5 @@ p.note {
   margin-bottom: 15px;
   padding: 4px 12px;
 }
+
+

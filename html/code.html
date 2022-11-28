@@ -22,25 +22,93 @@
   <div class='content'>
 
     <!-- Maybe add some code snippets in here for illustration for curious people?
-  Or maybe, simply, add a link to repo/code/js somewhere on the webpage. -->
+    Or maybe, simply, add a link to repo/code/js somewhere on the webpage. -->
 
     <h1>Implementation</h1>
+
       <p>
-        ...
-        <!-- How to construct -->
+        The visual part was implemented using the <a href="https://p5js.org/">P5.js</a> library. The code of the implementation is
+        available in the <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code">code/</a> folder of the repository.
       </p>
+      
+      <p>
+        <!-- In order to construct ... (explain integerExchange.js here and its complicated math :3)       -->
+        <!-- The most pertinent part of the code lies in the <a href=""> integerExchange.js</a>
+        loop ray.directions and mirrors,
+          getAllBounces(mirror, dir),
+          addBounces(mirror,nb-split,dir,bounce-dir),
+        
+        then,
+        computeMapping(), getNext() -->
+      </p>
+
 
     <h1>Remarks and difficulties</h1>
       <p>
-        <!-- i.e. we have quite understood how it works,
-        BUT,
-        we don't find it pertinent,
-        at least not in practice,
-        at least in our implementation. -->
+        The main difficulty in understanding Eppstein's article is its conciseness. 
+        Indeed, the article is very concise and does not always present examples to illustrate explanations, 
+        making understanding difficult for non-specialists in this field.
+        For instance, most of the examples and proofs were generic rather than centered around the mirror problem itself.
+      </p>
+      <h2>Interval exchange</h2>
+      <p>
+        The article introduces the algorithm by saying that it allows to calculate the final output of the ray 
+        (i.e. absorbed, loops or escaped) without simulating all the bounces. 
+        It causes us some confusion when we were trying to understand the interval exchange transformation 
+        because we need to compute every possible bounces to construct the mapping.
+        Therefore, we had some conceptual misunderstandings as to us it was like: 
+        "Instead of computing the bounces one-by-one, we compute a mapping of all the possible bounces" 
+        which seemed not better from our point of view. 
+         
+        However, it is useful when we work in a static environment since we can compute the mapping only once 
+        and use the fast iterated interval exchange for all the rays.
+      </p>
+      <p class="note">
+        To keep it simple, we compute the mapping bounce-by-bounce in our implementation.
+        However this is possible to optimize the construction time of the mapping by working with intervals.
+        Indeed, by the nature of your problem, there is some piece-wise linearity and we can decompose it by mapping intervals.
+        For example, if we have 2 points A and C put on a first mirror that reflects the ray respectively towards X and Z on a second mirror,
+        then a bounce B between A and C will be reflected towards a point Y between X and Z.
+      </p>
+      <figure>
+        <img style="width: 400px; height: auto;"
+          src='../images/figures/linear_interval_reflection.png' alt='missing' class="center" />
+      </figure>
+
+      <h2>Topology</h2>
+      <!-- We believe that surface triangulation is not always necessary. (+develop) -->
+      <p>
+        The main paper does not expand on the topological part and simply says that 
+        the problem of the iterated interval exchange transformation can be reduce 
+        to a well-known problem of following paths on a normal curve on a triangulated surface.
+        Moreover, he mentions that this path-following problem can be solved by the Erickson and Nayyeri's algorithms.
+      </p>
+      <p>
+        However, this last paragraph alone is not comprehensible when we do not have background knowledge about topology.
+        Hopefully, thanks to another Eppstein's paper<sup><a href="#sourceMain" id="ref1">1</a></sup>
+        and the Erickson and Nayyeri's paper<sup><a href="#sourceErickson" id="ref2">2</a></sup>
+        we obtain extra information about
+        the flow and construction of the algorithm, as well as clarification about topological vocabulary such as the difference
+        between edge and arc coordinates as well as the meaning of normal curve and normal arc.
+
       </p>
 
-      <h2> Topology </h2>
-      <!-- We believe that surface triangulation is not always necessary. (+develop) -->
+      <h2>Interval, subinterval and sub-subinterval</h2>
+      <p>
+        A final difficulty encountered during reading concerns the ambiguity caused by similar words like 
+        "interval", "subinterval" and "subsubinterval" without clearly labelling those words with physical objects in our problem
+        which sometimes make comprehension a bit tricky.
+      </p>
+
+      <footer style="margin-top: 50px;">
+        <hr/>
+        <div style="padding-top: 10px">
+        <sup id="sourceMain">David Eppstein. “Reflections in an octagonal mirror maze”<a href="#ref1">↩</a></sup>
+        <br>
+        <sup id="sourceErickson">Erickson, Jeff and Amir Nayyeri. “Tracing Compressed Curves in Triangulated Surfaces”<a href="#ref2">↩</a></sup>
+        </div>
+      </footer>
+
 
   </div>
 
