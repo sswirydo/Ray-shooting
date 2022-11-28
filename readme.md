@@ -7,4 +7,4 @@ The goal of the project is to read and understand one or several recent research
 
 # Pages
 
-<https://sswirydo.github.io/CompGeom-Ray-Tracing/>
+<https://sswirydo.github.io/Ray-shooting/>
