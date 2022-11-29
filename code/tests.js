@@ -19,6 +19,7 @@ function createTestEnv1() {
 }
 
 function createTestEnv2() {
+  // loop
   GRIDS = 20;
   mirrors.push(new Mirror(0, 3, 0, 7));
   mirrors.push(new Mirror(0, 7, 3, 10));

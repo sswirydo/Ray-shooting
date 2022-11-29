@@ -11,10 +11,17 @@ class Ray {
     this.path = [this.start];
   }
 
+  /*
+    Stores the points from which the ray has been reflected.
+    Useful for drawing.
+  */
   addPointToPath(point) {
     this.path.push(point);
   }
 
+  /*
+    Returns all the possible direction to which a ray can reflect.
+  */
   _computeDirections() {
     let directions = [];
     if (this.dir.x === 0 || this.dir.y === 0 || this.dir.x === this.dir.y || this.dir.x === -this.dir.y) {

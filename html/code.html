@@ -32,6 +32,16 @@
       </p>
       
       <p>
+        The most interesting part of the code is contained in the <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code/integerExchange.js">integerExchange.js</a> file.
+        Once the mirror environment has been built and the initial ray specified using the visual tool,
+        the program loops all the mirrors for each possible ray direction (at most eight),
+        and starts creating our list of bounce objects.
+        The bounce objects represent each possible intersection between rays and mirrors for a given environment.
+        As the octagonal environment is an integer space, the number of bounces is also finite.
+      </p>
+      <p>
+        ...
+        <!-- (e.g. |x| for vertical mirror, |y| for horizontal mirror, |x-y| or |x + y| for a mirror oriented at 45°, depending on the slopes). -->
         <!-- In order to construct ... (explain integerExchange.js here and its complicated math :3)       -->
         <!-- The most pertinent part of the code lies in the <a href=""> integerExchange.js</a>
         loop ray.directions and mirrors,
@@ -41,7 +51,9 @@
         then,
         computeMapping(), getNext() -->
       </p>
-
+    
+      <h2>Special untreated cases</h2> 
+      <!-- → "T" shaped mirror will not always reflect. -->
 
     <h1>Remarks and difficulties</h1>
       <p>

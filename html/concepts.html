@@ -120,7 +120,9 @@
         that a light ray could reach by bouncing towards its 8 possibles directions.
         <figure>
           <img style="width: 350px; height: auto;" src='../images/figures/article-figure-in-tool.png' alt='missing' class="center" />
-          <figcaption></figcaption>
+          <figcaption>
+            Reconstruction of the example presented in the main reference using the Tool.
+          </figcaption>
         </figure>
       </p>
 
@@ -167,7 +169,14 @@
           As a light ray can hit a mirror from at most eight possible directions, we will multiply
           that mirror interval by at most eight, in order to obtain distinct (mirror, incoming_ray) tuples.
         </p>
-          + ILLUSTRATION
+        <figure>
+          <img style="width: 750px; height: auto;"
+            src='../images/figures/complete_integer_interval.png' alt='missing' class="center" />
+            <figcaption>
+              Construction of the complete integer interval by concatenating and aligning the mirrors into a single line.
+              Repeated 8 times to consider all the possible ray's directions.
+            </figcaption>
+        </figure>
 
 
     <h1>Partial integer interval exchange</h1>
@@ -212,7 +221,7 @@
       Consequently, we obtain a complete bijective mapping for all bounces and we are sure that non-reflective element or not map to a reflective element 
       in less than n steps.
     </p>
-      + GRAPHICAL ILLUSTRATION + ILLUSTRATION intervals numbers
+      + TODO: GRAPHICAL ILLUSTRATION with the algo (non-reflective reflects) + add trap visualization
 
     <h1>Fast iterated interval exchange using topology</h1>
 
@@ -263,7 +272,7 @@
       </p>
 
       <figure>
-        <img style="width: 400px; height: auto;" src='../images/figures/3-Figure2-1.png' alt='missing' class="center" />
+        <img style="width: 500px; height: auto;" src='../images/figures/3-Figure2-1.png' alt='missing' class="center" />
         <figcaption>
           Interval exchange as triangulated manifold.
           Note that it does not actually represent mirror subintervals,

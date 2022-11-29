@@ -1,4 +1,11 @@
 class IntegerExchange {
+
+  /*
+    Constructor. 
+    Takes the mirror environment and the initial ray as reference for construction.
+    Starts by surrounding the mirror environment using a non-reflective bounding box,
+    then computes all the possible bounces.
+  */
   constructor(ray, mirrors) {
     this.intervals = []; // List of 'Bounce' of the integer interval ('Bounce' contains in_dir, point, out_dir)
     this.exchange = []; // Mapping for the intervals
@@ -40,6 +47,10 @@ class IntegerExchange {
     console.log("EXCHANGE", this.exchange);
   }
 
+  /*
+    Debug function that allows to retrieve all the bounces
+    at (x,y) position.
+  */
   _debugTestFindBounce(x, y) {
     for (let idx = 0; idx < this.intervals.length; idx++) {
       let bounce = this.intervals[idx];
@@ -51,15 +62,23 @@ class IntegerExchange {
     }
   }
 
-  // technically,
-  // the function should be called n-times,
-  // rather than looping n times
+  /*
+    Takes as input the light ray 'ray' we want to know the output,
+    and the number 'n' for the maximal number of iterations.
+
+    The function start by seeking the first bounce
+    by matching the output direction of the ray
+    with the first bounce of the same input direction
+    in its path.
+    Then, it simply loops from bounce to bounce at most n times.
+
+    The output is stored in the ray.path path list. 
+  */
   f(ray, n) {
     let previous_idx = null;
     let bounce_idx = this._getFirstBounce(ray);
     if (bounce_idx) {
       for (let i = 0; i < n; i++) {
-        // TODO : stop loop if ray re-enters same path (?)
         ray.addPointToPath(this.intervals[bounce_idx].point);
         previous_idx = bounce_idx;
         bounce_idx = this.exchange[bounce_idx];
@@ -73,26 +92,12 @@ class IntegerExchange {
     }
   }
 
-  _getFirstBounce(ray) {
-    let candidate = null;
-    let min_dist = +Infinity;
-    for (let idx = 0; idx < this.intervals.length; idx++) {
-      let next_bounce = this.intervals[idx];
-      if (ray.dir.isEqual(next_bounce.in_dir)) {
-        // Check same directions
-        if (this._areAlign(ray.start, next_bounce.point, ray.dir)) {
-          // then candidate
-          let dist = ray.start.getSquareDist(next_bounce.point);
-          if (dist < min_dist) {
-            min_dist = dist;
-            candidate = idx;
-          }
-        }
-      }
-    }
-    return candidate;
-  }
 
+
+  /* 
+    Checks if two points are aligned.
+    Returns true/false.
+  */
   _areAlign(start, end, dir) {
     if (dir.x === 0) {
       // if vertical direction
@@ -114,17 +119,27 @@ class IntegerExchange {
     return false;
   }
 
+  /*
+    Main creation process.
+    Loops each mirror in each direction,
+    creates the bounces and maps them
+    one to another.
+  */
   _compute(ray, mirrors) {
     for (let dir of ray.directions) {
       for (let mirror of mirrors) {
-        let [nb_splits, bounce_dir] = this._getAllBounces(mirror, dir);
+        let [nb_splits, bounce_dir] = this._getAllBouncesPerMirror(mirror, dir);
         this._addBounces(mirror, nb_splits, dir, bounce_dir);
       }
     }
     this._computeMapping();
   }
 
-  _getAllBounces(mirror, dir) {
+  /*
+    Returns the total number of bounces that lie on a mirror,
+    and the output direction by which the ray will exit the bounce.
+  */
+  _getAllBouncesPerMirror(mirror, dir) {
     if (mirror.orientation === HORIZONTAL) {
       return [mirror.size * abs(dir.y), new Point(dir.x, -dir.y)];
     } else if (mirror.orientation === VERTICAL) {
@@ -154,10 +169,14 @@ class IntegerExchange {
         ];
       }
     } else {
-      console.error("Unexpected case (fct: _getAllBounces())");
+      console.error("Unexpected case (fct: _getAllBouncesPerMirror())");
     }
   }
 
+  /*
+    Creates the bounce objects.
+    Stores them in the this.intervals list.
+  */
   _addBounces(mirror, nb_splits, in_dir, out_dir) {
 
     let bounce = null;
@@ -187,6 +206,93 @@ class IntegerExchange {
     }
   }
 
+  /*
+    Maps a bounce to the next bounce.
+  */
+  _computeMapping() {
+    for (let bounce of this.intervals) {
+      this.exchange.push(this._getNext(bounce));
+    }
+  }
+
+  /*
+    Seeks the first bounce a given ray encounters.
+    Returns the index of the first bounce.
+  */
+  _getFirstBounce(ray) {
+    return this._getNextCandidate(ray.start, ray.dir);
+  }
+
+  /*
+    Seeks the first bounce a given bounce encounters.
+    Returns the index of the first bounce.
+  */
+  _getNext(bounce) {
+    if (!bounce.out_dir) return -1;
+    return this._getNextCandidate(bounce.point, bounce.out_dir);
+  }
+
+  /*
+    Seeks the first bounce a given ray/bounce encounters.
+    Returns the index of that bounce.
+  */
+  _getNextCandidate(pos, dir) {
+    let candidate = null;
+    let min_dist = +Infinity;
+    for (let idx = 0; idx < this.intervals.length; idx++) {
+      let next_bounce = this.intervals[idx];
+      if (dir.isEqual(next_bounce.in_dir)) {
+        // check if bounces have the same direction (in vs out)
+        if (this._areAlign(pos, next_bounce.point, dir)) {
+          // checks if the bounces are aligned
+          let dist = pos.getSquareDist(next_bounce.point);
+          // chooses the nearest bounce using simple euclidean distance
+          if (dist < min_dist) {
+            min_dist = dist;
+            candidate = idx;
+          }
+        }
+      }
+    }
+    return candidate;
+  }
+
+ 
+
+  /*
+    Checks if multiple bounces that have the same position
+    and the same input direction exist.
+    This might happen if two mirror intersect.
+    
+    Returns true/false if the given bounce is already stored,
+    and sets the out direction of the stored bounce 
+    to null to mark it as not reflective.
+
+    Important note.
+    Will this might stop the ray from bouncing in cases
+    where it shouldn't bounce in the first place,
+    it might prevent some "wanted" bounces 
+    from bouncing as well, if an endpoint and
+    a non-endpoint bounce intersect.
+    ("wanted" between quotes, as following
+    the article endpoints are non-reflective,
+    and technically it is still an endpoint)
+
+    Example. Let's take two reflective mirrors that will
+    form a 'T' shape.
+    The middle bounce of the horizontal bar is reflective. 
+    The upper bounce of the vertical bounce is non-reflective 
+    as it is an endpoint.
+    Note that those bounces intersect.
+    Setting bounce.out_dir = null; prevent a ray hitting from the bottom
+    to reflect, as the path is blocked.
+    However, if the path reflects from the top, this will
+    block that reflection as well.
+
+    Possible way to fix:
+    add to the bounce a tag telling if it is an endpoint or not,
+    and allow incoming rays only from a given set range.
+  */
   _is_bounce_duplicate(in_dir, point) {
     let ans = false;
     for (let bounce of this.intervals) {
@@ -196,36 +302,5 @@ class IntegerExchange {
       }
     }
     return ans;
-  }
-
-  _computeMapping() {
-    for (let bounce of this.intervals) {
-      this.exchange.push(this._getNext(bounce));
-    }
-  }
-
-  _getNext(bounce) {
-    if (!bounce.out_dir) {
-      // If no bounce
-      return -1;
-    }
-    // Optimize with dico
-    let candidate = null;
-    let min_dist = +Infinity;
-    for (let idx = 0; idx < this.intervals.length; idx++) {
-      let next_bounce = this.intervals[idx];
-      if (bounce.out_dir.isEqual(next_bounce.in_dir)) {
-        // Check same directions
-        if (this._areAlign(bounce.point, next_bounce.point, bounce.out_dir)) {
-          // then candidate
-          let dist = bounce.point.getSquareDist(next_bounce.point);
-          if (dist < min_dist) {
-            min_dist = dist;
-            candidate = idx;
-          }
-        }
-      }
-    }
-    return candidate;
   }
 }

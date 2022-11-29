@@ -5,12 +5,13 @@ class Mirror {
     this.size = max(abs(x1 - x2), abs(y1 - y2)); // nbr of unit segment
     this.orientation = this._determineOrientation();
     this.print();
-
-    // actually EACH SIDE of the mirror
-    // COULD be marked as reflective or non reflective
-    // but we simplified it to both side
-    // as it would unnecessarily complicate
-    // the implementation for not much
+    /* Note
+      actually EACH SIDE of the mirror
+      COULD be marked as reflective or non reflective
+      but we simplified it to both side
+      as it would unnecessarily complicate
+      the implementation for not much
+    */
     this.is_reflective = reflective;
   }
 
@@ -22,6 +23,9 @@ class Mirror {
     return this.start.getSlope(this.end);
   }
 
+  /*
+    Returns if the mirror if horizontal, vertical or diagonal.
+  */
   _determineOrientation() {
     let ans = null;
     if (this.start.x === this.end.x) {
