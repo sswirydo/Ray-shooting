@@ -1,53 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/sidebar.css">
-    <link rel="stylesheet" href="../css/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/sidebar.css" />
+    <link rel="stylesheet" href="../css/style.css" />
     <title>Code</title>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="sidebar">
+      <a class="" href="../index.html">Home</a>
+      <a class="" href="concepts.html">Concepts</a>
+      <a class="active" href="code.html">Code</a>
+      <a class="" href="tool.html">Tool</a>
+      <a class="" href="references.html">References</a>
+    </div>
 
-  <div class="sidebar">
-    <a class="" href="../index.html">Home</a>
-    <a class="" href="concepts.html">Concepts</a>
-    <a class="active" href="code.html">Code</a>
-    <a class="" href="tool.html">Tool</a>
-    <a class="" href="references.html">References</a>
-  </div>
-
-
-  <div class='content'>
-
-    <!-- Maybe add some code snippets in here for illustration for curious people?
+    <div class="content">
+      <!-- Maybe add some code snippets in here for illustration for curious people?
     Or maybe, simply, add a link to repo/code/js somewhere on the webpage. -->
 
-    <h1>How to use the Tool</h1>
-    <p>
+      <h1>How to use the Tool</h1>
       <ul>
         <li>
-          <u>Adding mirrors</u>:
-          select two points on the grid that will mark the two endpoints of the mirror,
-          and check the reflective checkbox whether you want it to be reflective or not.
-          Note that mirrors can only be vertical, horizontal, or at 45°.
+          <u>Adding mirrors</u>: select two points on the grid that will mark
+          the two endpoints of the mirror, and check the reflective checkbox
+          whether you want it to be reflective or not. Note that mirrors can
+          only be vertical, horizontal, or at 45°.
         </li>
         <li>
-          <u>Adding ray</u>:
-          select two points on the grid, where the first point indicates the starting point of the ray,
-          and the second one the direction of the ray, relative to the previously selected starting point.
-          Note that only one ray can be drawn at once.
+          <u>Adding ray</u>: select two points on the grid, where the first
+          point indicates the starting point of the ray, and the second one the
+          direction of the ray, relative to the previously selected starting
+          point. Note that only one ray can be drawn at once.
         </li>
         <li>
-          <u>Fire the ray</u>:
-          executes the algorithm and draws the reflections of the chosen ray.
-          The maximal number of reflections can be specified by in the <i>steps</i> input.
-          Requires at least one mirror and a light ray.
+          <u>Fire the ray</u>: executes the algorithm and draws the reflections
+          of the chosen ray. The maximal number of reflections can be specified
+          by in the <i>steps</i> input. Requires at least one mirror and a light
+          ray.
         </li>
         <li>
-          <u>Tests</u>:
-           three tests are available.
+          <u>Tests</u>: three tests are available.
           <ol>
             <li>reproduces the environment given in the main reference</li>
             <li>creates a loop</li>
@@ -55,164 +50,197 @@
           </ol>
         </li>
       </ul>
-    </p>
-    
-      
-    <h1>Implementation</h1>
+
+      <h1>Implementation</h1>
       <p>
-        The visual part was implemented using the <a href="https://p5js.org/">P5.js</a> library. The code of the implementation is
-        available in the <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code">code/</a> folder of the repository.
-        The most interesting part is in the <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code/integerExchange.js">integerExchange.js</a> file.
+        The visual part was implemented using the
+        <a href="https://p5js.org/">P5.js</a> library. The code of the
+        implementation is available in the
+        <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code"
+          >code/</a
+        >
+        folder of the repository. The most interesting part is in the
+        <a
+          href="https://github.com/sswirydo/Ray-shooting/tree/main/code/integerExchange.js"
+          >integerExchange.js</a
+        >
+        file.
       </p>
 
       <h2>Main code details</h2>
-        <p>
-          <b>[<code>compute</code>]</b> Once the mirror environment has been built and the initial ray specified using the visual tool,
-          the program loops all the mirrors in each possible ray direction (at most eight),
-          and starts creating our list of bounce objects.
-          The bounce objects represent each possible intersection between rays and mirrors in a given environment.
-        </p>
-        <p>
-          <b>[<code>getAllBouncesPerMirror</code>]</b> As the octagonal environment is represented in an integer space, the number of bounces is also finite.
-          Per mirror, it is equal to the length of the mirror, defined by <code>max(abs(x1 - x2), abs(y1 - y2))</code>,
-          and multiplied by either <code>abs(dir.x)</code>, <codee>abs(dir.y)</code> or <code>abs(abs(dir.x) - abs(dir.y))</code>,
-          for vertical, horizontal and diagonal mirrors respectively.
-          Alongside, each (mirror, ray direction) tuple gets attributed an output direction for the outgoing ray,
-          depending on the current input direction and the slope of the mirror.
-        </p>
-        <p>
-          <b>[<code>addBounces</code>]</b> Using the output of the previous function, we create the bounces by first adding bounces corresponding to the mirror endpoints,
-          then adding the reflective bounces alongside each mirror.
-        </p>
-        <p>
-          <b>[<code>computeMapping, getNext</code>]</b> 
-          Finally, in order to map one bounce to another,
-          we simply double loop each for each bounce and check 
-          <ol>
-            <li>
-              if their directions match, i.e. if the output direction of the first bounce equals the input direction of the second one
-            </li>
-            <li>
-              if they are aligned (by a simple linear combination check)
-            </li>
-            <li>
-              and in case 1) and 2) are both respected for multiple bounces, we simply take the nearest one by checking the euclidean distance 
-            </li>
-          </ol>
-        </p>
-        <p>
-          <b>[<code>f (ray, n)</code>]</b> In order to trace the path of a given ray, we start by checking the first encountered bounce,
-          then we simple follow the bounce mapping for at most <i>n</i> steps, jumping from one bounce to another.
-        </p>
-      
-      <h2>Time complexity</h2>
-        <ol>
-          <li>The creation of bounces runs in <code>O</code> of
-            the number of mirrors 
-            multiplied by the number of ray directions
-              (which equals 4 if the ray is grid aligned or at 45°, or 8 otherwise)
-            and finally multiplied by the number of bounces per mirror (which is mainly determined by the slope of the ray)
-          </li>
-          <li>The mapping itself runs in <code>O</code> of 
-            the square of the number of bounces.
-          </li>
-          <li>
-            Finally the ray shooting runs in <code>O</code> of the number of bounces 
-              in order to find the first bounce, 
-            then in <code>O</code> of the number of specified steps (<i>n</i>) 
-              in order to trace the path the ray travels.
-          </li>
-        </ol>
-      
-      <h2>Missing parts</h2>
-        <p>
-          Note that our tool does not completely implement
-          the whole scope of the article, but rather allows
-          to illustrate some important parts, such as the finite
-          number of reflections, directions and its general idea.
-
-          In order to obtain a complete implementation we would have
-          to complement it with a reduction into a
-          triangulated manifold and apply a series of subroutines
-          from computational topology, that would potentially
-          make the ray-shooting faster (although the construction would be longer),
-          but the overall outcome of ray-shooting tool would not change.
-          As this topological implementation is quite time consuming
-          and does not bring much to the process and scope of this project (or at least visually),
-          we preferred to focus on the <i>basis</i> of the tool and the popularization of concepts.
-        </p>
-
-    <h1>Remarks and difficulties</h1>
       <p>
-        The main difficulty in understanding Eppstein's article is its conciseness. 
-        Indeed, the article is very concise and does not always present examples to illustrate explanations, 
-        making understanding difficult for non-specialists in this field.
-        For instance, most of the examples and proofs were generic rather than centered around the mirror problem itself.
+        <b>[<code>compute</code>]</b> Once the mirror environment has been built
+        and the initial ray specified using the visual tool, the program loops
+        all the mirrors in each possible ray direction (at most eight), and
+        starts creating our list of bounce objects. The bounce objects represent
+        each possible intersection between rays and mirrors in a given
+        environment.
+      </p>
+      <p>
+        <b>[<code>getAllBouncesPerMirror</code>]</b> As the octagonal
+        environment is represented in an integer space, the number of bounces is
+        also finite. Per mirror, it is equal to the length of the mirror,
+        defined by <code>max(abs(x1 - x2), abs(y1 - y2))</code>, and multiplied
+        by either <code>abs(dir.x)</code>, <code>abs(dir.y)</code> or
+        <code>abs(abs(dir.x) - abs(dir.y))</code>, for vertical, horizontal and
+        diagonal mirrors respectively. Alongside, each (mirror, ray direction)
+        tuple gets attributed an output direction for the outgoing ray,
+        depending on the current input direction and the slope of the mirror.
+      </p>
+      <p>
+        <b>[<code>addBounces</code>]</b> Using the output of the previous
+        function, we create the bounces by first adding bounces corresponding to
+        the mirror endpoints, then adding the reflective bounces alongside each
+        mirror.
+      </p>
+      <p>
+        <b>[<code>computeMapping, getNext</code>]</b>
+        Finally, in order to map one bounce to another, we simply double loop
+        each for each bounce and check
+      </p>
+      <ol>
+        <li>
+          if their directions match, i.e. if the output direction of the first
+          bounce equals the input direction of the second one
+        </li>
+        <li>if they are aligned (by a simple linear combination check)</li>
+        <li>
+          and in case 1) and 2) are both respected for multiple bounces, we
+          simply take the nearest one by checking the euclidean distance
+        </li>
+      </ol>
+      <p>
+        <b>[<code>f (ray, n)</code>]</b> In order to trace the path of a given
+        ray, we start by checking the first encountered bounce, then we simple
+        follow the bounce mapping for at most <i>n</i> steps, jumping from one
+        bounce to another.
+      </p>
+
+      <h2>Time complexity</h2>
+      <ol>
+        <li>
+          The creation of bounces runs in <code>O</code> of the number of
+          mirrors multiplied by the number of ray directions (which equals 4 if
+          the ray is grid aligned or at 45°, or 8 otherwise) and finally
+          multiplied by the number of bounces per mirror (which is mainly
+          determined by the slope of the ray)
+        </li>
+        <li>
+          The mapping itself runs in <code>O</code> of the square of the number
+          of bounces.
+        </li>
+        <li>
+          Finally the ray shooting runs in <code>O</code> of the number of
+          bounces in order to find the first bounce, then in <code>O</code> of
+          the number of specified steps (<i>n</i>) in order to trace the path
+          the ray travels.
+        </li>
+      </ol>
+
+      <h2>Missing parts</h2>
+      <p>
+        Note that our tool does not completely implement the whole scope of the
+        article, but rather allows to illustrate some important parts, such as
+        the finite number of reflections, directions and its general idea. In
+        order to obtain a complete implementation we would have to complement it
+        with a reduction into a triangulated manifold and apply a series of
+        subroutines from computational topology, that would potentially make the
+        ray-shooting faster (although the construction would be longer), but the
+        overall outcome of ray-shooting tool would not change. As this
+        topological implementation is quite time consuming and does not bring
+        much to the process and scope of this project (or at least visually), we
+        preferred to focus on the <i>basis</i> of the tool and the
+        popularization of concepts.
+      </p>
+
+      <h1>Remarks and difficulties</h1>
+      <p>
+        The main difficulty in understanding Eppstein's article is its
+        conciseness. Indeed, the article is very concise and does not always
+        present examples to illustrate explanations, making understanding
+        difficult for non-specialists in this field. For instance, most of the
+        examples and proofs were generic rather than centered around the mirror
+        problem itself.
       </p>
       <h2>Interval exchange</h2>
       <p>
-        The article introduces the algorithm by saying that it allows to calculate the final output of the ray 
-        (i.e. absorbed, loops or escaped) without simulating all the bounces. 
-        It causes us some confusion when we were trying to understand the interval exchange transformation 
-        because we need to compute every possible bounces to construct the mapping.
-        Therefore, we had some conceptual misunderstandings as to us it was like: 
-        "Instead of computing the bounces one-by-one, we compute a mapping of all the possible bounces" 
-        which seemed not better from our point of view. 
-         
-        However, it is useful when we work in a static environment since we can compute the mapping only once 
-        and use the fast iterated interval exchange for all the rays.
+        The article introduces the algorithm by saying that it allows to
+        calculate the final output of the ray (i.e. absorbed, loops or escaped)
+        without simulating all the bounces. It causes us some confusion when we
+        were trying to understand the interval exchange transformation because
+        we need to compute every possible bounces to construct the mapping.
+        Therefore, we had some conceptual misunderstandings as to us it was
+        like: "Instead of computing the bounces one-by-one, we compute a mapping
+        of all the possible bounces" which seemed not better from our point of
+        view. However, it is useful when we work in a static environment since
+        we can compute the mapping only once and use the fast iterated interval
+        exchange for all the rays.
       </p>
       <p class="note">
-        To keep it simple, we compute the mapping bounce-by-bounce in our implementation.
-        However this is possible to optimize the construction time of the mapping by working with intervals.
-        Indeed, by the nature of your problem, there is some piece-wise linearity and we can decompose it by mapping intervals.
-        For example, if we have 2 points A and C put on a first mirror that reflects the ray respectively towards X and Z on a second mirror,
-        then a bounce B between A and C will be reflected towards a point Y between X and Z.
+        To keep it simple, we compute the mapping bounce-by-bounce in our
+        implementation. However this is possible to optimize the construction
+        time of the mapping by working with intervals. Indeed, by the nature of
+        your problem, there is some piece-wise linearity and we can decompose it
+        by mapping intervals. For example, if we have 2 points A and C put on a
+        first mirror that reflects the ray respectively towards X and Z on a
+        second mirror, then a bounce B between A and C will be reflected towards
+        a point Y between X and Z.
       </p>
       <figure>
-        <img style="width: 400px; height: auto;"
-          src='../images/figures/linear_interval_reflection.png' alt='missing' class="center" />
+        <img
+          style="width: 400px; height: auto"
+          src="../images/figures/linear_interval_reflection.png"
+          alt="missing"
+          class="center"
+        />
       </figure>
 
       <h2>Topology</h2>
       <!-- We believe that surface triangulation is not always necessary. (+develop) -->
       <p>
-        The main paper does not expand on the topological part and simply says that 
-        the problem of the iterated interval exchange transformation can be reduce 
-        to a well-known problem of following paths on a normal curve on a triangulated surface.
-        Moreover, he mentions that this path-following problem can be solved by the Erickson and Nayyeri's algorithms.
+        The main paper does not expand on the topological part and simply says
+        that the problem of the iterated interval exchange transformation can be
+        reduce to a well-known problem of following paths on a normal curve on a
+        triangulated surface. Moreover, he mentions that this path-following
+        problem can be solved by the Erickson and Nayyeri's algorithms.
       </p>
       <p>
-        However, this last paragraph alone is not comprehensible when we do not have background knowledge about topology.
-        Hopefully, thanks to another Eppstein's paper<sup><a href="#sourceMain" id="ref1">1</a></sup>
-        and the Erickson and Nayyeri's paper<sup><a href="#sourceErickson" id="ref2">2</a></sup>
-        we obtain extra information about
-        the flow and construction of the algorithm, as well as clarification about topological vocabulary such as the difference
-        between edge and arc coordinates as well as the meaning of normal curve and normal arc.
-
+        However, this last paragraph alone is not comprehensible when we do not
+        have background knowledge about topology. Hopefully, thanks to another
+        Eppstein's paper<sup><a href="#sourceMain" id="ref1">1</a></sup> and the
+        Erickson and Nayyeri's paper<sup
+          ><a href="#sourceErickson" id="ref2">2</a></sup
+        >
+        we obtain extra information about the flow and construction of the
+        algorithm, as well as clarification about topological vocabulary such as
+        the difference between edge and arc coordinates as well as the meaning
+        of normal curve and normal arc.
       </p>
 
       <h2>Interval, subinterval and sub-subinterval</h2>
       <p>
-        A final difficulty encountered during reading concerns the ambiguity caused by similar words like 
-        "interval", "subinterval" and "subsubinterval" without clearly labelling those words with physical objects in our problem
-        which sometimes make comprehension a bit tricky.
+        A final difficulty encountered during reading concerns the ambiguity
+        caused by similar words like "interval", "subinterval" and
+        "subsubinterval" without clearly labelling those words with physical
+        objects in our problem which sometimes make comprehension a bit tricky.
       </p>
 
-      <footer style="margin-top: 50px;">
-        <hr/>
+      <footer style="margin-top: 50px">
+        <hr />
         <div style="padding-top: 10px">
-        <sup id="sourceMain">David Eppstein. “Reflections in an octagonal mirror maze”<a href="#ref1">↩</a></sup>
-        <br>
-        <sup id="sourceErickson">Erickson, Jeff and Amir Nayyeri. “Tracing Compressed Curves in Triangulated Surfaces”<a href="#ref2">↩</a></sup>
+          <sup id="sourceMain"
+            >David Eppstein. “Reflections in an octagonal mirror maze”<a
+              href="#ref1"
+              >↩</a
+            ></sup
+          >
+          <br />
+          <sup id="sourceErickson"
+            >Erickson, Jeff and Amir Nayyeri. “Tracing Compressed Curves in
+            Triangulated Surfaces”<a href="#ref2">↩</a></sup
+          >
         </div>
       </footer>
-
-
-  </div>
-
-
-
-
-
-</body>
+    </div>
+  </body>
+</html>

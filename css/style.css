@@ -1,16 +1,15 @@
-
 p {
   text-align: justify;
 }
 
 h1 {
   padding: 5px;
-  background-color:#a9caf8;
+  background-color: #a9caf8;
 }
 
 h2 {
   padding: 3px;
-  background-color:#e1edfd;
+  background-color: #e1edfd;
 }
 
 span.edge_coord {
@@ -22,11 +21,11 @@ span.arc_coord {
 }
 
 span.normal_arc {
-  color:darkcyan;
+  color: darkcyan;
 }
 
 span.normal_curve {
-  color:blue;
+  color: blue;
 }
 
 figcaption {
@@ -51,5 +50,3 @@ p.note {
   margin-bottom: 15px;
   padding: 4px 12px;
 }
-
-
