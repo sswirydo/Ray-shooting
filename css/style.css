@@ -3,6 +3,16 @@ p {
   text-align: justify;
 }
 
+h1 {
+  padding: 5px;
+  background-color:#a9caf8;
+}
+
+h2 {
+  padding: 3px;
+  background-color:#e1edfd;
+}
+
 span.edge_coord {
   color: brown;
 }
@@ -36,8 +46,8 @@ figcaption {
 
 /* Source: https://www.w3schools.com/howto/howto_css_notes.asp */
 p.note {
-  background-color: #d7e8f8;
-  border-left: 6px solid #4f85d0;
+  background-color: #ddf8d7;
+  border-left: 6px solid #56d04f;
   margin-bottom: 15px;
   padding: 4px 12px;
 }

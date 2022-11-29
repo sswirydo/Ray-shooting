@@ -59,55 +59,53 @@
     
       
     <h1>Implementation</h1>
-
       <p>
         The visual part was implemented using the <a href="https://p5js.org/">P5.js</a> library. The code of the implementation is
         available in the <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code">code/</a> folder of the repository.
+        The most interesting part is in the <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code/integerExchange.js">integerExchange.js</a> file.
       </p>
+
+      <h2>Main code details</h2>
+        <p>
+          <b>[<code>compute</code>]</b> Once the mirror environment has been built and the initial ray specified using the visual tool,
+          the program loops all the mirrors in each possible ray direction (at most eight),
+          and starts creating our list of bounce objects.
+          The bounce objects represent each possible intersection between rays and mirrors in a given environment.
+        </p>
+        <p>
+          <b>[<code>getAllBouncesPerMirror</code>]</b> As the octagonal environment is represented in an integer space, the number of bounces is also finite.
+          Per mirror, it is equal to the length of the mirror, defined by <code>max(abs(x1 - x2), abs(y1 - y2))</code>,
+          and multiplied by either <code>abs(dir.x)</code>, <codee>abs(dir.y)</code> or <code>abs(abs(dir.x) - abs(dir.y))</code>,
+          for vertical, horizontal and diagonal mirrors respectively.
+          Alongside, each (mirror, ray direction) tuple gets attributed an output direction for the outgoing ray,
+          depending on the current input direction and the slope of the mirror.
+        </p>
+        <p>
+          <b>[<code>addBounces</code>]</b> Using the output of the previous function, we create the bounces by first adding bounces corresponding to the mirror endpoints,
+          then adding the reflective bounces alongside each mirror.
+        </p>
+        <p>
+          <b>[<code>computeMapping, getNext</code>]</b> 
+          Finally, in order to map one bounce to another,
+          we simply double loop each for each bounce and check 
+          <ol>
+            <li>
+              if their directions match, i.e. if the output direction of the first bounce equals the input direction of the second one
+            </li>
+            <li>
+              if they are aligned (by a simple linear combination check)
+            </li>
+            <li>
+              and in case 1) and 2) are both respected for multiple bounces, we simply take the nearest one by checking the euclidean distance 
+            </li>
+          </ol>
+        </p>
+        <p>
+          <b>[<code>f (ray, n)</code>]</b> In order to trace the path of a given ray, we start by checking the first encountered bounce,
+          then we simple follow the bounce mapping for at most <i>n</i> steps, jumping from one bounce to another.
+        </p>
       
-      <p>
-        The most interesting part of the code is in the <a href="https://github.com/sswirydo/Ray-shooting/tree/main/code/integerExchange.js">integerExchange.js</a> file.
-      </p>
-      <p>
-        <b>[<code>compute</code>]</b> Once the mirror environment has been built and the initial ray specified using the visual tool,
-        the program loops all the mirrors in each possible ray direction (at most eight),
-        and starts creating our list of bounce objects.
-        The bounce objects represent each possible intersection between rays and mirrors in a given environment.
-      </p>
-      <p>
-        <b>[<code>getAllBouncesPerMirror</code>]</b> As the octagonal environment is represented in an integer space, the number of bounces is also finite.
-        Per mirror, it is equal to the length of the mirror, defined by <code>max(abs(x1 - x2), abs(y1 - y2))</code>,
-        and multiplied by either <code>abs(dir.x)</code>, <codee>abs(dir.y)</code> or <code>abs(abs(dir.x) - abs(dir.y))</code>,
-        for vertical, horizontal and diagonal mirrors respectively.
-        Alongside, each (mirror, ray direction) tuple gets attributed an output direction for the outgoing ray,
-        depending on the current input direction and the slope of the mirror.
-      </p>
-      <p>
-        <b>[<code>addBounces</code>]</b> Using the output of the previous function, we create the bounces by first adding bounces corresponding to the mirror endpoints,
-        then adding the reflective bounces alongside each mirror.
-      </p>
-      <p>
-        <b>[<code>computeMapping, getNext</code>]</b> 
-        Finally, in order to map one bounce to another,
-        we simply double loop each for each bounce and check 
-        <ol>
-          <li>
-            if their directions match, i.e. if the output direction of the first bounce equals the input direction of the second one
-          </li>
-          <li>
-            if they are aligned (by a simple linear combination check)
-          </li>
-          <li>
-            and in case 1) and 2) are both respected for multiple bounces, we simply take the nearest one by checking the euclidean distance 
-          </li>
-        </ol>
-      </p>
-      <p>
-        <b>[<code>f (ray, n)</code>]</b> In order to trace the path of a given ray, we start by checking the first encountered bounce,
-        then we simple follow the bounce mapping for at most <i>n</i> steps, jumping from one bounce to another.
-      </p>
-      <p>
-        <b>[Time complexity]</b>
+      <h2>Time complexity</h2>
         <ol>
           <li>The creation of bounces runs in <code>O</code> of
             the number of mirrors 
@@ -125,7 +123,24 @@
               in order to trace the path the ray travels.
           </li>
         </ol>
-      </p>
+      
+      <h2>Missing parts</h2>
+        <p>
+          Note that our tool does not completely implement
+          the whole scope of the article, but rather allows
+          to illustrate some important parts, such as the finite
+          number of reflections, directions and its general idea.
+
+          In order to obtain a complete implementation we would have
+          to complement it with a reduction into a
+          triangulated manifold and apply a series of subroutines
+          from computational topology, that would potentially
+          make the ray-shooting faster (although the construction would be longer),
+          but the overall outcome of ray-shooting tool would not change.
+          As this topological implementation is quite time consuming
+          and does not bring much to the process and scope of this project (or at least visually),
+          we preferred to focus on the <i>basis</i> of the tool and the popularization of concepts.
+        </p>
 
     <h1>Remarks and difficulties</h1>
       <p>
