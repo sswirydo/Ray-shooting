@@ -55,11 +55,11 @@ function computeMapping() {
   colorElement(mapping_button, "red");
   if (ray !== null && mirrors.length > 0) {
     integer_exchange = new IntegerExchange(ray, mirrors, partial_checkbox.checked());
-    step_end = integer_exchange.max_nbr_bounces;
-    step_cycle = integer_exchange.intervals.length;
     colorElement(mapping_button, "green");
 
     if (partial_checkbox.checked()) {
+      step_end = integer_exchange.max_nbr_bounces;
+      step_cycle = integer_exchange.intervals.length;
       step_select.show();
       step_input.hide();
       step_text.hide();
