@@ -21,10 +21,6 @@
       <h1>Remarks</h1>
       <ul>
         <li>
-          This project and especially the current page are currently work in
-          progress thus expect changes to be made.
-        </li>
-        <li>
           The below work closely follows the work of David Eppstein. See
           <a href="/Ray-shooting/html/references.html">References</a> page.
         </li>
@@ -35,49 +31,30 @@
       </ul>
 
       <h1>Introduction</h1>
-      <!-- <p>
-        In computer graphics,
-        we are often given a 3D-space containing a set of triangles
-        that we further want to render on a computer's screen.
-        One of the main tasks is to determine what color will each on-screen pixel take,
-        which is mostly determined by the object we want to render.
-        While we could simply attribute a basic color to each object,
-        in order to obtain more realistic visualizations,
-        the most common technique is to resort to ray-tracing.
-      </p>
-      <p>
-        Its idea it to start from the object we desire to render,
-        and then explore different incoming light rays that land and on it,
-        and finally blend their colors together in order to obtain the final color.
-        However, it is not especially a simple task, or at least not fast when implemented simply.
-        The number of possible incoming rays is nearly countless,
-        collision detection (or ray-object intersection) is required in order to know what object the ray hit,
-        what colors it mixed, take into account the number of reflections for intensity, and eventually what direction it went.
-        And the whole process has to be repeated recursively for each reflection.
-      </p> -->
 
       <p>
-        <!-- The article we choose to present might not actually be especially useful for actual computer graphics,
-        but it shares some of those ideas. -->
-        We have a light ray, a set of octagonal mirrors and non-reflective
-        surfaces, living in a integer grid world, and we want to know where a
-        shot light ray will end up. Will it disappear somewhere? Will it manage
-        to escape a mirror labyrinth or will it loop infinitely?
+        We have a ray of light, a set of octagonal mirrors and non-reflective
+        surfaces, living in a integer grid world. The question we want to respond,
+        is to know where shooting the light ray will bring it up.
+        Will it escape the the mirror labyrinth, be absorbed at some point,
+        or perhaps will it loop infinitely?
       </p>
 
       <p>
-        The main idea behind the algorithm is to map every possible reflection
-        of a light ray with its next bounce in an octagonal mirror integer
-        environnement. This mapping is called an
-        <strong>integer interval exchange transformation</strong>, noted f(x).
-        Therefore, to get the ray's direction and position after n bounces we
-        simply have to apply n times this exchange transformation. This
-        succession of n mappings is called an
-        <strong>iterated integer interval exchange transformation</strong>,
-        noted f<sup>(n)</sup>(x). An optimized version, called
-        <strong>fast iterated exchange transformation</strong>, allows to
-        compute the result of the n<sup>th</sup> iteration without computing all
-        of the intermediate exchanges, using concepts from computational
+        The main idea behind the algorithm is,
+        in an octagonal mirror integer environnement,
+        to map each possible mirror position at which a ray of light can reflect,
+        with the corresponding mirror position towards which the ray has been reflected.
+        As we will see, this mapping is called an <strong>integer interval exchange transformation</strong>,
+        noted <code>f(x)</code>, as we will permute intervals of integers to obtain the previously evoked mapping.
+        Therefore, in order to obtain a ray's direction and position after <code>n</code> reflections/bounces
+        we will simply have to apply <code>n</code> times this exchange transformation.
+        The process of applying the exchange <code>n</code> times is called an
+        <strong><u>iterated</u> integer interval exchange transformation</strong>,
+        noted <code>f<sup>(n)</sup>(x)</code>.
+        An optimized version, called <strong><u>fast</u> iterated exchange transformation</strong>,
+        allows to compute the result of the <code>n</code><sup>th</sup> iteration without computing all
+        of the intermediate exchanges, by using concepts from computational
         topology.
         <!-- (i.e. instead of doing 2+2+2 we will do 2*3) -->
         <!-- (i.e. it is like a function g(n,x) = f<sup>(n)</sup>(x)). -->
@@ -112,21 +89,17 @@
       <ol>
         <li>
           Since the mirrors have only 4 possible slopes, all our rays can be
-          reflected in at most 8 possible directions.
+          reflected in at most 8 possible directions: we can just negate or/and exchange the
+          x and y coordinates of the vector depending on the mirror slope.
         </li>
         <li>
           Given a ray going in a specified direction, it can hit any mirror in
           only a finite number of positions.
         </li>
         <li>
-          The ray's space before and after the reflection are the same. The
-          initial ray could go through any integer point of our environnement if
-          we translate its initial position. It remains true after any
-          reflection, the new ray could go through any integer point if we
-          translate its position.
+          The space in which a ray of light lives does not change after a reflection.
         </li>
       </ol>
-
       <p>
         Therefore, it means there is a finite and numerable number of possible
         bounces in an octagonal mirror environnement making this algorithm
@@ -135,8 +108,8 @@
       <h2>Example</h2>
       <p>
         Following those hypotheses, we will obtain a system like represented by
-        the image below. The ray starts at coordinates (7,3) (red circle) with
-        an direction (-1,-2). It is reflected by mirrors, that are represented
+        the image below. The ray starts at coordinates <code>(7,3)</code> (red circle) with
+        an direction <code>(-1,-2)</code>. It is reflected by mirrors, that are represented
         by the blue lines, and escape through the right-down corner. Note that
         the blue circles represent all the possible positions that a light ray
         could reach by bouncing towards its 8 possibles directions.
@@ -144,7 +117,7 @@
           <img
             style="width: 350px; height: auto"
             src="../images/figures/article-figure-in-tool.png"
-            alt="missing"
+            alt="Reflections in an octagonal mirror maze using the tool."
             class="center"
           />
           <figcaption>
@@ -154,11 +127,7 @@
         </figure>
       </p>
 
-      <!-- Lemmas and so on about collisions -->
-
       <h1>Integer interval exchange transformation</h1>
-      <!--With the general context now established, the observations and lemmas arising from the initial hypotheses,
-      we are ready to explore the core concepts.-->
       <p>
         An integer interval exchange transformation consists in dividing an
         interval of integers into subintervals, then permuting those
@@ -166,20 +135,18 @@
       </p>
       <p class="note">
         In our mirror problem, the integer interval exchange transformation
-        divides mirrors (intervals) into bounces (integer), which are all the
+        divides mirrors (intervals) into bounces (integers), which are all the
         possible places where a light ray can hit a mirror, then permutes them
         in order to obtain the next bounce. One can easily calculate the number
         of possible bounces, which are equally-distributed, on an unit mirror
-        according to its orientation and the ray's direction (x,y) (e.g. |x| for
-        vertical mirror, |y| for horizontal mirror, |x-y| or |x + y| for a
+        according to its orientation and the ray's direction <code>(x,y)</code> (e.g. <code>|x|</code> for
+        vertical mirror, <code>|y|</code> for horizontal mirror, <code>|x-y|</code> or <code>|x + y|</code> for a
         mirror oriented at 45°, depending on the slopes).
       </p>
-
       <p>
-        <!-- More generally,  (exchange). -->
         Therefore it creates a bijective mapping between bounces. This bijective
-        property is really important. Indeed, it allows to guarantee a solution
-        when applying n times the exchange transformation, as we want the
+        property is really important. Indeed, it allows to guarantee a solution exists
+        when applying <code>n</code> times the exchange transformation, as we want the
         transformation to cycle.
       </p>
       <figure>
@@ -209,7 +176,8 @@
         together, where each mirror will form a subinterval. As a light ray can
         hit a mirror from at most eight possible directions, we will multiply
         that mirror interval by at most eight, in order to obtain distinct
-        (mirror, incoming_ray) tuples.
+        <code>(mirror, incoming ray slope)</code> tuples.
+        <!-- ! technically we could/should divide the big mirror interval by considering the subsubintervals → by where it will go next -->
       </p>
       <figure>
         <img
@@ -224,6 +192,13 @@
           all the possible ray's directions.
         </figcaption>
       </figure>
+      <p>
+        Afterwards, we can further subdivide those mirror intervals into subintervals,
+        depending on which next-mirror each initial-mirror would send the ray after reflection.
+        For instance, if one part of the blue mirror sends a ray on the green mirror,
+        and the second part on the yellow mirror,
+        we could subdivide the blue mirror interval into two blue-to-green and blue-to-yellow subintervals.
+      </p>
 
       <h1>Partial integer interval exchange</h1>
       <p>
@@ -253,8 +228,8 @@
       <p>
         The <strong>non-reflective</strong> surfaces and endpoints break the
         bijection of the integer interval exchange transformation. To solve this
-        problem we simply <i>virtually</i> map a non-reflective surface as it
-        was reflective, and a mirror's endpoint as as it flipped the ray back in
+        problem we simply <i>virtually</i> map a non-reflective surface as if it
+        was reflective, and a mirror's endpoint as if it flipped the ray back in
         the opposite direction.
       </p>
       <p>
@@ -292,7 +267,7 @@
         />
         <figcaption>
           Overview of the whole pipeline to construct the partial integer
-          interval exchange from the environment.<br />
+          interval exchange from the environment.
           For clarity purpose, this schema considers only one of the eight ray's
           directions.
         </figcaption>
