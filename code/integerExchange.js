@@ -7,7 +7,7 @@ class IntegerExchange {
     then computes all the possible bounces.
   */
   constructor(ray, mirrors) {
-    this.intervals = []; // List of 'Bounce' of the integer interval ('Bounce' contains in_dir, point, out_dir)
+    this.intervals = []; // List of 'Bounce' of the integer interval ('Bounce' contains: (in_dir, point, out_dir))
     this.exchange = []; // Mapping for the intervals
 
     let bbox = [
