@@ -53,6 +53,7 @@ function yToP5(y) {
 function computeReflections() {
   ray.clear();
   integer_exchange = new IntegerExchange(ray, mirrors);
+  integer_exchange.max_nbr_bounces;
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -226,7 +227,6 @@ function addMirror() {
 
 function fireTheRay() {
   let n = parseInt(n_steps_input.value(), 10);
-
   colorElement(fire_button, "red");
 
   if (!isNaN(n) && ray !== null && mirrors.length > 0) {
@@ -235,8 +235,13 @@ function fireTheRay() {
     computeReflections();
 
     console.log("[Earth]");
+    // if case "normal"
     integer_exchange.f(ray, n);
-
+    //integer_exchange.f(ray, integer_exchange.max_nbr_bounces);
+    // elif "whole_cycle"
+    //integer_exchange.f(ray, integer_exchange.intervals.length);
+    // elif if case choose steps -> slider
+    // ...
     console.log("[Water]");
   } else {
     colorElement(fire_button, "red");
@@ -339,7 +344,9 @@ function drawBounceCoords() {
   if (integer_exchange) {
     stroke(1, 1, 255);
     for (let bounce of integer_exchange.intervals) {
-      ellipse(xToP5(bounce.point.x), yToP5(bounce.point.y), 4, 4);
+      if (bounce !== "TRAP") {
+        ellipse(xToP5(bounce.point.x), yToP5(bounce.point.y), 4, 4);
+      }
     }
     stroke(0);
   }

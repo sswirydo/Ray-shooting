@@ -8,9 +8,11 @@ class IntegerExchange {
   */
   constructor(ray, mirrors) {
     this.intervals = []; // List of 'Bounce' of the integer interval ('Bounce' contains: (in_dir, point, out_dir))
+    this.max_nbr_bounces = null;
+    this.trap_idxs = []; // Indexes where to add trap
     this.exchange = []; // Mapping for the intervals
 
-    let bbox = [
+    let bbox = [ // The big surronding box absorbing exiting rays
       new Mirror(
         xToGrid(0),
         yToGrid(0),
@@ -79,12 +81,14 @@ class IntegerExchange {
     let bounce_idx = this._getFirstBounce(ray);
     if (bounce_idx) {
       for (let i = 0; i < n; i++) {
-        ray.addPointToPath(this.intervals[bounce_idx].point);
+        if (this.intervals[bounce_idx] !== "TRAP") {
+          ray.addPointToPath(this.intervals[bounce_idx].point);
+        }
         previous_idx = bounce_idx;
         bounce_idx = this.exchange[bounce_idx];
-        if (bounce_idx === null || bounce_idx === -1) {
+        /*if (bounce_idx === null || bounce_idx === -1) {
           break;
-        }
+        }*/
       }
     } else {
       console.log(">> Ray does not intersect any mirror.");
@@ -132,7 +136,9 @@ class IntegerExchange {
         this._addBounces(mirror, nb_splits, dir, bounce_dir);
       }
     }
-    this._computeMapping();
+    this.max_nbr_bounces = this.intervals.length;
+    this._addTraps(this.max_nbr_bounces);
+    this._computeMapping(this.max_nbr_bounces);
   }
 
   /*
@@ -180,8 +186,9 @@ class IntegerExchange {
   _addBounces(mirror, nb_splits, in_dir, out_dir) {
 
     let bounce = null;
-    bounce =  new Bounce(in_dir, mirror.start, null); // mirror endpoint does not reflects
+    bounce =  new Bounce(in_dir, mirror.start, in_dir.reverse(), false); // mirror endpoint does not reflects (virtually send back the light ray)
     if (! this._is_bounce_duplicate(bounce.in_dir, bounce.point)) {
+      this.trap_idxs.push(this.intervals.length);
       this.intervals.push(bounce);
     }
     
@@ -191,27 +198,51 @@ class IntegerExchange {
         lambda * mirror.end.x + (1 - lambda) * mirror.start.x,
         lambda * mirror.end.y + (1 - lambda) * mirror.start.y
       );
-      if (mirror.is_reflective) { //if bounce already existing
+      if (mirror.is_reflective) { 
         bounce = new Bounce(in_dir, point, out_dir);
       } else {
-        bounce = new Bounce(in_dir, point, null);
+        bounce = new Bounce(in_dir, point, out_dir, false); // non-reflective surface does not reflects (virtually reflects like a mirror)
       }
       if (! this._is_bounce_duplicate(bounce.in_dir, bounce.point)) {
+        if (! bounce.reflects) { this.trap_idxs.push(this.intervals.length); }
         this.intervals.push(bounce);
       }
     }
-    bounce = new Bounce(in_dir, mirror.end, null); // mirror endpoint does not reflects
+    bounce = new Bounce(in_dir, mirror.end, in_dir.reverse(), false); // mirror endpoint does not reflects  (virtually send back the light ray)
     if (! this._is_bounce_duplicate(bounce.in_dir, bounce.point)) {
+      this.trap_idxs.push(this.intervals.length);
       this.intervals.push(bounce);
+    }
+  }
+
+  /*
+    Add traps in 'intervals'.
+    It consits in adding 'n' (= size of 'intervals') intermediate nodes when non-reflective bounce.
+  */
+  _addTraps(size_trap) {
+    for (let idx of this.trap_idxs.reverse()) { // reverse to start insertion by the end (easier to add in a list)
+      for (let i=0; i< size_trap; i++) {
+        this.intervals.splice(idx+1, 0, "TRAP");
+      }
     }
   }
 
   /*
     Maps a bounce to the next bounce.
   */
-  _computeMapping() {
-    for (let bounce of this.intervals) {
-      this.exchange.push(this._getNext(bounce));
+  _computeMapping(size_trap) {
+    let idx = 0;
+    while (idx < this.intervals.length) {
+      let bounce = this.intervals[idx];
+      let next = this._getNext(bounce);
+      if (! bounce.reflects) {
+        for (let i=0; i<size_trap; i++) {
+          idx += 1;
+          this.exchange.push(idx);
+        }
+      }
+      this.exchange.push(next);
+      idx += 1;
     }
   }
 
@@ -241,7 +272,7 @@ class IntegerExchange {
     let min_dist = +Infinity;
     for (let idx = 0; idx < this.intervals.length; idx++) {
       let next_bounce = this.intervals[idx];
-      if (dir.isEqual(next_bounce.in_dir)) {
+      if (next_bounce !== "TRAP" && dir.isEqual(next_bounce.in_dir)) {
         // check if bounces have the same direction (in vs out)
         if (this._areAlign(pos, next_bounce.point, dir)) {
           // checks if the bounces are aligned
@@ -298,7 +329,7 @@ class IntegerExchange {
     for (let bounce of this.intervals) {
       if (bounce.point.isEqual(point) && bounce.in_dir.isEqual(in_dir)){
         ans = true;
-        bounce.out_dir = null;
+        bounce.out_dir = bounce.in_dir.reverse();
       }
     }
     return ans;
