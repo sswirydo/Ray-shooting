@@ -90,18 +90,19 @@ function setup() {
 
   ray_button = makeButton("Add Ray", 425, 20 + 25 * 7, addRay);
 
-  n_steps_input = makeInput(425, 20 + 25 * 9, N_STEPS_DEFAULT);
+  mapping_button = makeButton("Mapping", 425, 20 + 25 * 9, computeMapping);
+
+  n_steps_input = makeInput(425, 20 + 25 * 10, N_STEPS_DEFAULT);
   n_steps_text = createElement("h3", "steps");
   n_steps_text.position(
     n_steps_input.x + n_steps_input.width + 5,
     n_steps_input.y - 20
   );
-
-  fire_button = makeButton("Fire the ray!", 425, 20 + 25 * 10, fireTheRay);
+  fire_button = makeButton("Fire the ray!", 425, 20 + 25 * 11, fireTheRay);
 
   test_select = createSelect();
   test_select.size(BUTTON_X_SIZE, BUTTON_Y_SIZE);
-  test_select.position(425, 20 + 25 * 12);
+  test_select.position(425, 20 + 25 * 13);
   test_select.changed(selectHandler);
   test_select.option("None", 0);
   test_select.option("Test 1: article reference", 1);
@@ -112,12 +113,12 @@ function setup() {
   test_text.position(test_select.x + test_select.width + 5, test_select.y - 20);
 
   grid_slider = createSlider(8, 50, 12, 2); // min,max,default,step
-  grid_slider.position(425, 20 + 25 * 13);
+  grid_slider.position(425, 20 + 25 * 14);
   grid_slider.style("width", "80px");
   grid_text = createElement("h3", "grid");
   grid_text.html("grids: " + (GRIDS_DEFAULT - 2));
   grid_text.position(grid_slider.x + grid_slider.width + 5, grid_slider.y - 20);
-  makeButton("Change grid", 425, 20 + 25 * 14, changeGrid);
+  makeButton("Change grid", 425, 20 + 25 * 15, changeGrid);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -224,15 +225,24 @@ function addMirror() {
   }
 }
 
+function computeMapping() {
+  if (ray !== null && mirrors.length > 0) {
+    computeReflections();
+    colorElement(mapping_button, "green");
+  }
+  else {
+    colorElement(mapping_button, "red");
+  }
+}
+
 function fireTheRay() {
   let n = parseInt(n_steps_input.value(), 10);
 
   colorElement(fire_button, "red");
 
-  if (!isNaN(n) && ray !== null && mirrors.length > 0) {
+  if (integer_exchange !== null && !isNaN(n) && ray !== null && mirrors.length > 0) {
     colorElement(fire_button, "green");
     console.log("[Fire]");
-    computeReflections();
 
     console.log("[Earth]");
     integer_exchange.f(ray, n);
