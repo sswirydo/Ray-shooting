@@ -23,11 +23,4 @@ class Point {
   getSlope(point) {
     return (point.y2 - this.y) / (point.x - this.x);
   }
-
-  /*
-    Return a point with the inverse coords. (i.e. (x,y) -> (-x, -y))
-  */
-  reverse(){
-    return new Point(-this.x, -this.y);
-  }
 }

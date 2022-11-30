@@ -21,6 +21,7 @@ var mirrors = [];
 var integer_exchange = null;
 var ray = null;
 var clickCount = 0;
+var n_steps= null;
 
 const HORIZONTAL = 0; // -
 const VERTICAL = 1; // |
@@ -50,9 +51,26 @@ function yToP5(y) {
   return RESOLUTION - (y + 1) * (RESOLUTION / GRIDS);
 }
 
-function computeReflections() {
-  ray.clear();
-  integer_exchange = new IntegerExchange(ray, mirrors);
+function computeMapping() {
+  colorElement(mapping_button, "red");
+  if (ray !== null && mirrors.length > 0) {
+    integer_exchange = new IntegerExchange(ray, mirrors, partial_checkbox.checked());
+    colorElement(mapping_button, "green");
+
+    if (partial_checkbox.checked()) {
+      step_end = integer_exchange.max_nbr_bounces;
+      step_cycle = integer_exchange.intervals.length;
+      step_select.show();
+      step_input.hide();
+      step_text.hide();
+    }
+    else {
+      step_select.hide();
+      step_input.show();
+      step_text.show();
+    }
+    fire_button.show();
+  }
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -90,34 +108,48 @@ function setup() {
 
   ray_button = makeButton("Add Ray", 425, 20 + 25 * 7, addRay);
 
-  n_steps_input = makeInput(425, 20 + 25 * 9, N_STEPS_DEFAULT);
-  n_steps_text = createElement("h3", "steps");
-  n_steps_text.position(
-    n_steps_input.x + n_steps_input.width + 5,
-    n_steps_input.y - 20
-  );
+  mapping_button = makeButton("Mapping", 425, 20 + 25 * 9, computeMapping);
+  partial_checkbox = createCheckbox("Partial ver. demo (computationally exhausting)", false);
+  partial_checkbox.position(425 + mapping_button.width, 20 + 25 * 9);
 
-  fire_button = makeButton("Fire the ray!", 425, 20 + 25 * 10, fireTheRay);
+  step_select = createSelect();
+  step_select.size(BUTTON_X_SIZE, BUTTON_Y_SIZE);
+  step_select.position(425, 20 + 25 * 10);
+  step_select.changed(selectNSteps);
+  step_select.option("[select]", 0);
+  step_select.option("Ray life ", 1);
+  step_select.option("Cycle", 2);
+  step_select.hide();
+
+  step_input = makeInput(425, 20 + 25 * 10);
+  step_text = createElement("h3", "steps");
+  step_text.position(step_input.x + step_input.width + 5, step_input.y - 20);
+  step_input.hide();
+  step_text.hide();
+
+  fire_button = makeButton("Shoot ray", 425, 20 + 25 * 11, fireTheRay);
+  fire_button.hide();
 
   test_select = createSelect();
   test_select.size(BUTTON_X_SIZE, BUTTON_Y_SIZE);
-  test_select.position(425, 20 + 25 * 12);
+  test_select.position(425, 20 + 25 * 13);
   test_select.changed(selectHandler);
   test_select.option("None", 0);
   test_select.option("Test 1: article reference", 1);
   test_select.option("Test 2: loop", 2);
   test_select.option("Test 3: article + non-reflective", 3);
 
+
   test_text = createElement("h3", "tests");
   test_text.position(test_select.x + test_select.width + 5, test_select.y - 20);
 
-  grid_slider = createSlider(8, 50, 12, 2); // min,max,default,step
-  grid_slider.position(425, 20 + 25 * 13);
+  grid_slider = createSlider(8, 50, 14, 2); // min,max,default,step
+  grid_slider.position(425, 20 + 25 * 14);
   grid_slider.style("width", "80px");
   grid_text = createElement("h3", "grid");
   grid_text.html("grids: " + (GRIDS_DEFAULT - 2));
   grid_text.position(grid_slider.x + grid_slider.width + 5, grid_slider.y - 20);
-  makeButton("Change grid", 425, 20 + 25 * 14, changeGrid);
+  makeButton("Change grid", 425, 20 + 25 * 15, changeGrid);
 }
 
 /* * * * * * * * * * * * * * * * *
@@ -139,6 +171,20 @@ function makeInput(xpos, ypos, defaultText = "") {
   input.position(xpos, ypos);
   input.value(defaultText);
   return input;
+}
+
+function selectNSteps() {
+  switch (step_select.value()) {
+    case "0":
+      break;
+    case "1":
+      n_steps = integer_exchange.max_nbr_bounces;
+      break;
+    case "2":
+      n_steps = integer_exchange.intervals.length;
+      break;
+    default:
+  }
 }
 
 // Tests
@@ -166,7 +212,13 @@ function resetEnv() {
   mirrors = [];
   integer_exchange = null;
 
+  step_select.hide();
+  step_input.hide();
+  step_text.hide();
+  fire_button.hide();
+
   clickCount = 0;
+  step_input.value("100");
   x1_input.value("");
   y1_input.value("");
   x2_input.value("");
@@ -225,18 +277,17 @@ function addMirror() {
 }
 
 function fireTheRay() {
-  let n = parseInt(n_steps_input.value(), 10);
-
+  if (! partial_checkbox.checked()) {
+    n_steps = parseInt(step_input.value(), 10)
+  }
   colorElement(fire_button, "red");
 
-  if (!isNaN(n) && ray !== null && mirrors.length > 0) {
+  if (!isNaN(n_steps) && ray !== null && mirrors.length > 0) {
+    ray.clear();
+    integer_exchange.f(ray, n_steps);
     colorElement(fire_button, "green");
     console.log("[Fire]");
-    computeReflections();
-
     console.log("[Earth]");
-    integer_exchange.f(ray, n);
-
     console.log("[Water]");
   } else {
     colorElement(fire_button, "red");
@@ -339,7 +390,9 @@ function drawBounceCoords() {
   if (integer_exchange) {
     stroke(1, 1, 255);
     for (let bounce of integer_exchange.intervals) {
-      ellipse(xToP5(bounce.point.x), yToP5(bounce.point.y), 4, 4);
+      if (bounce !== "TRAP") {
+        ellipse(xToP5(bounce.point.x), yToP5(bounce.point.y), 4, 4);
+      }
     }
     stroke(0);
   }
@@ -363,7 +416,6 @@ function drawRay() {
       xToP5(ray.start.x) + TEXT_OFFSET,
       yToP5(ray.start.y) - TEXT_OFFSET
     );
-
     stroke(0);
     drawRayPath();
   }
@@ -385,7 +437,7 @@ function drawRayPath() {
 
 windowResized = function () {
   resizeCanvas(windowWidth, windowHeight);
-};
+}
 
 function drawRayDirections(ray) {
   let count = 0;
