@@ -1,7 +1,7 @@
 class IntegerExchange {
 
   /*
-    Constructor. 
+    Constructor.
     Takes the mirror environment and the initial ray as reference for construction.
     Starts by surrounding the mirror environment using a non-reflective bounding box,
     then computes all the possible bounces.
@@ -72,7 +72,7 @@ class IntegerExchange {
     in its path.
     Then, it simply loops from bounce to bounce at most n times.
 
-    The output is stored in the ray.path path list. 
+    The output is stored in the ray.path path list.
   */
   f(ray, n) {
     let previous_idx = null;
@@ -94,7 +94,7 @@ class IntegerExchange {
 
 
 
-  /* 
+  /*
     Checks if two points are aligned.
     Returns true/false.
   */
@@ -184,7 +184,7 @@ class IntegerExchange {
     if (! this._is_bounce_duplicate(bounce.in_dir, bounce.point)) {
       this.intervals.push(bounce);
     }
-    
+
     for (let i = 1; i < nb_splits; i++) {
       let lambda = i / nb_splits;
       let point = new Point(
@@ -257,21 +257,21 @@ class IntegerExchange {
     return candidate;
   }
 
- 
+
 
   /*
     Checks if multiple bounces that have the same position
     and the same input direction exist.
     This might happen if two mirror intersect.
-    
+
     Returns true/false if the given bounce is already stored,
-    and sets the out direction of the stored bounce 
+    and sets the out direction of the stored bounce
     to null to mark it as not reflective.
 
     Important note.
     Will this might stop the ray from bouncing in cases
     where it shouldn't bounce in the first place,
-    it might prevent some "wanted" bounces 
+    it might prevent some "wanted" bounces
     from bouncing as well, if an endpoint and
     a non-endpoint bounce intersect.
     ("wanted" between quotes, as following
@@ -280,8 +280,8 @@ class IntegerExchange {
 
     Example. Let's take two reflective mirrors that will
     form a 'T' shape.
-    The middle bounce of the horizontal bar is reflective. 
-    The upper bounce of the vertical bounce is non-reflective 
+    The middle bounce of the horizontal bar is reflective.
+    The upper bounce of the vertical bounce is non-reflective
     as it is an endpoint.
     Note that those bounces intersect.
     Setting bounce.out_dir = null; prevent a ray hitting from the bottom
