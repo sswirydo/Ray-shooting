@@ -177,7 +177,6 @@
         hit a mirror from at most eight possible directions, we will multiply
         that mirror interval by at most eight, in order to obtain distinct
         <code>(mirror, incoming ray slope)</code> tuples.
-        <!-- ! technically we could/should divide the big mirror interval by considering the subsubintervals → by where it will go next -->
       </p>
       <figure>
         <img
@@ -202,8 +201,9 @@
 
       <h1>Partial integer interval exchange</h1>
       <p>
-        In order for our mirror problem to be full expressed as a bijection in
-        the exchange transformation, we need to handle some additional cases:
+        Until now, the mirror problem is only partially defined
+        as it must be full expressed as a bijection in the exchange transformation.
+        To fix this, we need to handle some additional cases:
       </p>
       <ul>
         <li>
@@ -235,9 +235,10 @@
       <p>
         At this point, we obtain a bijective mapping. However, this mapping is
         logically incorrect since we ignore the non-reflective property of those
-        surfaces. The <strong>partial</strong> integer interval exchange solves
-        this problem by extending the initial interval with
-        <i>infinite</i> traps. Once a light ray hits a non reflective surface,
+        surfaces.
+        In order to convert the partial exchange into a full integer interval exchange,
+        we extend the initial interval with <i>infinite</i> traps.
+        Once a light ray hits a non reflective surface,
         it will first map it to the start of a trap, before mapping it out of
         the trap as explained in the previous paragraph.
       </p>
@@ -250,8 +251,8 @@
         steps.
       </p>
       <p>
-        In other words, the partial integer interval exchange proposes to add,
-        for a ray that hits a non-reflective element, a new trap element
+        In other words,
+        for a ray that hits a non-reflective element, it adds a new trap element
         in-between this non-reflective element and its hypothetical reflection
         where the ray would go if the surface was actually reflective.
         Consequently, we obtain a complete bijective mapping for all bounces and
@@ -400,7 +401,28 @@
         >" article that we will omit here.
       </p>
 
-      <!-- Mention the non-topological approach ? -->
+      <h1>Time complexity of the algorithm</h1>
+      <ul>
+        <li><code>n</code>: number of segments (input)</li>
+        <li><code>N</code>: magnitude of integers (input)</li>
+        <li><code>m</code>: number of intervals on range [0,M-1]</li>
+        <li><code>M</code>: integer range of intervals</li>
+      </ul>
+      <ul>
+        <li>Number of bits required to specify the input: <code>O(n log N)</code></li>
+        <li>Reduction to triangulation: <code>O(log<sup>2</sup> M)</code></li>
+        <li>Triangulation part: <code>O(m<sup>2</sup> log M)</code></li>
+        <li>Partial transformation problem: <code>O(m<sup>2</sup> log M + log<sup>2</sup> M)</code><br>
+            To solve the partial exchange, we need to reduce by triangulation and solve the problem by following the normal curve.
+            Therefore, we add the two previous complexity.
+        </li>
+        <li>Total time bound: <code>O(n<sup>2</sup> log N + log<sup>2</sup> N)</code><br>
+          Since the number of intervals depends of the number of segments, we can express m in O(n). 
+          Moreover the size of the integer range of intervals depends of the size of mirrors, which depends of the magnitude of integer inputs.
+          Therefore we can express M in O(N).
+        </li>
+      </ul>
+      <u>
     </div>
   </body>
 </html>

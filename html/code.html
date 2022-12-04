@@ -43,6 +43,8 @@
           <u>Fire the ray</u>: draws the reflections of the chosen ray.
           The maximal number of reflections can be specified
           by in the <i>steps</i> input. Note that Mapping must be executed before Compute.
+          Also note that you can move the ray without recomputing the mapping,
+          as long as it is parallel to the initial direction or parallel to the direction of any reflection.
         </li>
         <li>
           <u>Tests</u>: three tests are available.
@@ -120,22 +122,28 @@
       </p>
 
       <h2>Time complexity</h2>
+      <ul>
+        <li>Number of mirrors <code>m</code></li>
+        <li>Size of mirrors <code>s</code></li>
+        <li>Number of ray directions <code>r</code> (which equals 4 if
+          the ray is grid aligned or at 45°, or 8 otherwise)</li>
+        <li>Number of bounces <code>b</code></li>
+        <li>Number of specified steps <code>n</code> (from f<sup>(n)</sup>(x))</li>
+      </ul>
       <ol>
         <li>
-          The creation of bounces runs in <code>O</code> of the number of
-          mirrors multiplied by the number of ray directions (which equals 4 if
-          the ray is grid aligned or at 45°, or 8 otherwise) and finally
-          multiplied by the number of bounces per mirror (which is mainly
-          determined by the slope of the ray)
+          The creation of all bounces <code>b</code>, runs in <code>O(msr)</code> where <code>r</code> is a multiplicative constant.
         </li>
         <li>
-          The mapping itself runs in <code>O</code> of the square of the number
-          of bounces.
+          The mapping itself runs in <code>O(b<sup>2</sup>)</code>.
         </li>
         <li>
-          Finally the ray shooting runs in <code>O</code> of the number of
-          bounces in order to find the first bounce, then in <code>O</code> of
-          the number of specified steps (<i>n</i>) in order to trace the path
+          Finally the ray shooting runs in <code>O(b)</code> in order to find the first bounce,
+          then in <code>O(n)</code> in order to trace the path
+          the ray travels.
+        </li>
+        <li>
+          Therefore, our implementation runs in <code>O((ms)<sup>2</sup>)</code>.
           the ray travels.
         </li>
       </ol>
